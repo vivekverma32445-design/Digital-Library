@@ -1,0 +1,6 @@
+{
+  "name": "Digital Library",
+  "description": "Comprehensive self-study center management application for Maa Durga Digital Library featuring student membership, 36-seat shift booking, dynamic UPI QR payments, QR attendance, and admin management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
