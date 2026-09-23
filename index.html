@@ -2,32 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Maa Durga Digital Library - Official Live Portal & App</title>
-  <meta name="description" content="Official Portal of Maa Durga Digital Library - 36 AC Seats, 4 Flexible Shifts, Live Attendance & ID Cards. Managed by Vivek & Prince.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Digital Library - Maa Durga Digital Library</title>
+  <meta name="description" content="Official Maa Durga Digital Library app - 36 AC Seats, 4 Shifts, Attendance, UPI Payments & Digital ID Card. Created by Vivek & Prince.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    /* Exact Android Theme Colors */
     :root {
-      --primary: #1B5E20;
-      --primary-dark: #0A2E12;
-      --primary-light: #2E7D32;
-      --primary-subtle: #E8F5E9;
-      --gold: #D4AF37;
-      --gold-dark: #B8860B;
-      --gold-light: #FFF9E6;
-      --bg: #F4F6F9;
-      --surface: #FFFFFF;
-      --text: #0F172A;
-      --text-muted: #64748B;
-      --border: #E2E8F0;
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
-      --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
-      --shadow-md: 0 6px 20px rgba(0,0,0,0.08);
-      --shadow-lg: 0 12px 32px rgba(10,46,18,0.15);
+      --soft-cream: #FBF8F2;
+      --warm-cream: #F5EFE4;
+      --cream-gradient: #F0EBE0;
+      --deep-forest-green: #0F3818;
+      --primary-green: #1B5E20;
+      --primary-green-dark: #0A2E12;
+      --emerald-accent: #2E7D32;
+      --subtle-gold: #C49A45;
+      --subtle-gold-light: #FAF5EC;
+      --subtle-gold-border: #E2D4B7;
+      --charcoal-heading: #1E293B;
+      --charcoal-muted: #64748B;
+      --surface-card: #FFFFFF;
+      --surface-variant: #EBF2EC;
+      --border-color: #D6E2D8;
+      --seat-available-bg: #E8F5E9;
+      --seat-available-border: #A5D6A7;
+      --seat-occupied-bg: #FFE4E6;
+      --seat-occupied-border: #FDA4AF;
+      --seat-selected-bg: #FFD700;
+      --seat-selected-border: #B8860B;
     }
 
     * {
@@ -35,857 +39,1177 @@
       margin: 0;
       padding: 0;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: #0B130E;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: var(--charcoal-heading);
+      overflow-x: hidden;
     }
 
-    /* TOP NOTIFICATION / PROMO BAR */
-    .top-strip {
-      background: linear-gradient(90deg, #0A2E12, #1B5E20, #0A2E12);
-      color: #FFFFFF;
-      padding: 10px 20px;
+    /* Device Container: Adapts seamlessly to mobile or centered on desktop */
+    .app-device-frame {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background: var(--soft-cream);
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 0 50px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+
+    /* Sticky APK Download Top Header */
+    .app-top-download-bar {
+      background: linear-gradient(135deg, var(--deep-forest-green) 0%, var(--primary-green) 100%);
+      color: #FFFFFF;
+      padding: 9px 16px;
+      display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      border-bottom: 2px solid var(--gold);
+      border-bottom: 2px solid var(--subtle-gold);
       position: sticky;
       top: 0;
       z-index: 1000;
     }
-    .top-strip-left {
+    .app-top-download-bar .info-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: #FFE082;
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 13px;
+      gap: 5px;
     }
-    .badge-apk {
-      background: rgba(212,175,55,0.2);
-      border: 1px solid var(--gold);
-      color: #FFE082;
-      font-weight: 700;
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      letter-spacing: 0.5px;
-    }
-    .btn-download-hero {
+    .app-top-download-bar .btn-download {
       background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
       color: #0A2E12;
       text-decoration: none;
       font-weight: 800;
-      font-size: 13px;
-      padding: 8px 18px;
-      border-radius: 24px;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 20px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 14px rgba(212,175,55,0.4);
-      transition: all 0.2s;
+      gap: 5px;
+      box-shadow: 0 3px 10px rgba(212,175,55,0.4);
+      white-space: nowrap;
+      transition: transform 0.15s;
     }
-    .btn-download-hero:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(212,175,55,0.6);
+    .app-top-download-bar .btn-download:active {
+      transform: scale(0.95);
     }
 
-    /* MAIN HEADER */
-    .main-nav {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
+    /* Screen Management */
+    .screen-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+      min-height: calc(100vh - 48px);
+      background: var(--soft-cream);
+      position: relative;
+    }
+    .screen-view.active-screen {
       display: flex;
+    }
+    .screen-view.has-nav {
+      padding-bottom: 74px; /* clearance for bottom navigation */
+    }
+
+    /* 1. SPLASH SCREEN (Pixel-perfect to AuthScreens.kt) */
+    #screen-splash {
+      background: linear-gradient(180deg, #FBF8F2 0%, #F5EFE4 50%, #F0EBE0 100%);
       align-items: center;
       justify-content: space-between;
-      box-shadow: var(--shadow-sm);
+      padding: 60px 24px 30px;
+      text-align: center;
     }
-    .brand-wrap {
+    .splash-logo-box {
+      width: 124px;
+      height: 124px;
+      border-radius: 50%;
+      background: rgba(27, 94, 32, 0.12);
+      padding: 5px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .splash-logo-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2.5px solid var(--emerald-accent);
+      object-fit: cover;
+    }
+    .splash-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--charcoal-heading);
+      letter-spacing: 0.5px;
+    }
+    .splash-sub {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary-green);
+      margin-top: 4px;
+    }
+    .splash-tagline {
+      font-size: 12.5px;
+      color: var(--charcoal-muted);
+      margin-top: 6px;
+    }
+    .spinner-ring {
+      width: 28px;
+      height: 28px;
+      border: 2.5px solid rgba(27, 94, 32, 0.2);
+      border-top-color: var(--primary-green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 30px auto 0;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .splash-developer-badge {
+      background: rgba(235, 242, 236, 0.75);
+      border: 1px solid rgba(27, 94, 32, 0.4);
+      border-radius: 20px;
+      padding: 8px 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--charcoal-heading);
+    }
+    .splash-developer-badge span {
+      color: var(--primary-green);
+    }
+
+    /* 2. WELCOME SCREEN (Pixel-perfect to AuthScreens.kt WelcomeScreen) */
+    #screen-welcome {
+      background: linear-gradient(180deg, #FBF8F2 0%, #F5EFE4 60%, #F0EBE0 100%);
+      padding: 20px 20px 30px;
+      overflow-y: auto;
+    }
+    .estd-pill {
+      display: inline-block;
+      background: var(--subtle-gold-light);
+      border: 1px solid rgba(226, 212, 183, 0.8);
+      color: var(--subtle-gold);
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-top: 14px;
+    }
+    .welcome-card-option {
+      background: var(--surface-card);
+      border: 1.2px solid var(--border-color);
+      border-radius: 20px;
+      padding: 18px;
       display: flex;
       align-items: center;
       gap: 14px;
-      text-decoration: none;
-      color: inherit;
+      margin-bottom: 14px;
+      cursor: pointer;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+      transition: all 0.2s ease;
     }
-    .brand-logo {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 2px solid var(--gold);
-      object-fit: cover;
-      background: #FFFFFF;
+    .welcome-card-option:active {
+      transform: scale(0.98);
+      border-color: var(--primary-green);
+      background: #F4F8F4;
     }
-    .brand-text h1 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 20px;
-      font-weight: 800;
-      color: var(--primary-dark);
-      letter-spacing: -0.3px;
-    }
-    .brand-text p {
-      font-size: 12px;
-      color: var(--gold-dark);
-      font-weight: 700;
-    }
-    .nav-tabs {
+    .portal-icon-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
     }
-    .nav-tab-btn {
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .nav-tab-btn.active, .nav-tab-btn:hover {
-      background: var(--primary-subtle);
-      color: var(--primary);
-    }
-    .btn-portal-role {
-      background: var(--primary);
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 10px;
-      border: none;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    /* MAIN CONTAINER */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 24px 20px;
-      width: 100%;
-      flex: 1;
-    }
-
-    /* HERO BANNER */
-    .hero-banner {
-      background: linear-gradient(135deg, #071F0C 0%, #104318 50%, #1B5E20 100%);
-      color: white;
-      border-radius: var(--radius-lg);
-      padding: 36px 32px;
-      margin-bottom: 28px;
-      position: relative;
-      overflow: hidden;
-      border: 2px solid rgba(212,175,55,0.4);
-      box-shadow: var(--shadow-md);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-    }
-    .hero-banner h2 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 32px;
-      font-weight: 800;
-      margin-bottom: 8px;
+    .student-icon-bg {
+      background: var(--deep-forest-green);
       color: #FFFFFF;
     }
-    .hero-banner p {
-      font-size: 15px;
-      color: #C8E6C9;
-      max-width: 600px;
-      line-height: 1.5;
+    .admin-icon-bg {
+      background: #B45309;
+      color: #FFFFFF;
     }
-    .creator-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid var(--gold);
-      color: #FFE082;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      margin-top: 14px;
-    }
-
-    /* LAYOUT GRIDS */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 24px;
-    }
-    @media (max-width: 900px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-      .nav-tabs {
-        display: none;
-      }
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 24px;
-    }
-    .card-title {
-      font-size: 18px;
+    .pill-role-tag {
+      font-size: 9.5px;
       font-weight: 800;
-      color: var(--primary-dark);
+      padding: 2px 6px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+    .student-tag { background: #E8F5E9; color: #1B5E20; }
+    .admin-tag { background: #FEF3C7; color: #B45309; }
+
+    /* 3. AUTH FORMS (Login, Register, Forgot Password, Admin Login) */
+    .auth-container {
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .form-group-field {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--charcoal-heading);
+      margin-bottom: 6px;
+    }
+    .input-outline-box {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 12px;
+      background: #FFFFFF;
+      padding: 0 14px;
+      height: 50px;
+      transition: border-color 0.2s;
+    }
+    .input-outline-box:focus-within {
+      border-color: var(--primary-green);
+      box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.12);
+    }
+    .input-outline-box input {
+      border: none;
+      outline: none;
+      width: 100%;
+      height: 100%;
+      font-size: 15px;
+      color: var(--charcoal-heading);
+      background: transparent;
+    }
+    .prefix-flag {
+      font-weight: 800;
+      color: var(--primary-green);
+      margin-right: 8px;
+      font-size: 14px;
+    }
+    .btn-submit-green {
+      background: linear-gradient(135deg, var(--primary-green) 0%, var(--emerald-accent) 100%);
+      color: #FFFFFF;
+      border: none;
+      width: 100%;
+      height: 50px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(27, 94, 32, 0.3);
+      margin-top: 10px;
+      transition: all 0.2s;
+    }
+    .btn-submit-green:active {
+      transform: scale(0.98);
+    }
+
+    /* 4. STUDENT CONTAINER & M3 BOTTOM NAVIGATION */
+    .student-header-topbar {
+      background: #FFFFFF;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 18px;
+      border-bottom: 1px solid #E2E8F0;
+      position: sticky;
+      top: 45px;
+      z-index: 100;
     }
-
-    /* SHIFT SELECTOR */
-    .shift-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
+    .m3-bottom-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 480px;
+      background: #FFFFFF;
+      border-top: 1px solid #E2E8F0;
+      display: flex;
+      justify-content: space-around;
+      padding: 6px 0 10px;
+      z-index: 500;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
     }
-    @media (max-width: 600px) {
-      .shift-row {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-    .shift-box {
-      border: 2px solid var(--border);
-      background: #F8FAFC;
-      padding: 12px;
-      border-radius: var(--radius-md);
-      text-align: center;
+    .m3-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--charcoal-muted);
       cursor: pointer;
+      gap: 3px;
+      flex: 1;
+    }
+    .m3-nav-item .icon-box {
+      padding: 3px 14px;
+      border-radius: 16px;
+      font-size: 18px;
       transition: all 0.2s;
     }
-    .shift-box.active {
-      border-color: var(--primary);
-      background: var(--primary-subtle);
-      box-shadow: 0 4px 12px rgba(27,94,32,0.15);
+    .m3-nav-item.active {
+      color: var(--primary-green);
     }
-    .shift-box h4 {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--primary-dark);
-    }
-    .shift-box span {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 600;
+    .m3-nav-item.active .icon-box {
+      background: var(--surface-variant);
+      transform: translateY(-2px);
     }
 
-    /* 36 SEATS FLOOR MAP */
-    .desk-header {
-      background: #E2E8F0;
-      color: #334155;
-      font-size: 12px;
+    /* 5. STUDENT HOME TAB UI CARDS */
+    .home-scroll-pad {
+      padding: 18px;
+      overflow-y: auto;
+    }
+    .membership-gradient-card {
+      background: linear-gradient(135deg, #0F471A 0%, #1B5E20 60%, #2E7D32 100%);
+      color: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(15, 71, 26, 0.25);
+    }
+    .membership-status-pill {
+      background: #00C853;
+      color: #000000;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+
+    /* 6. 36 SEATS FLOOR MAP (Pixel-perfect to SeatSelectionScreen) */
+    .shift-toggle-row {
+      display: flex;
+      gap: 6px;
+      background: #FFFFFF;
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    .shift-chip {
+      flex: 1;
+      padding: 8px 6px;
+      text-align: center;
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--charcoal-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .shift-chip.selected-shift {
+      background: var(--primary-green);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(27, 94, 32, 0.3);
+    }
+
+    .seat-hall-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .hall-aisle-header {
+      background: #F1F5F9;
+      color: #475569;
+      font-size: 11px;
       font-weight: 800;
       text-align: center;
-      padding: 8px;
+      padding: 6px;
       border-radius: 8px;
-      letter-spacing: 2px;
-      margin-bottom: 18px;
+      letter-spacing: 1.5px;
+      margin-bottom: 14px;
     }
-    .seats-grid {
+    .seat-cubicles-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 10px;
-      margin-bottom: 18px;
+      gap: 8px;
     }
-    .seat-cube {
+    .seat-cube-cell {
       aspect-ratio: 1;
-      border-radius: 10px;
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
       cursor: pointer;
-      transition: all 0.2s;
       user-select: none;
-      position: relative;
+      transition: transform 0.15s;
     }
-    .seat-cube.available {
-      background: #E8F5E9;
-      color: #1B5E20;
-      border: 2px solid #A5D6A7;
+    .seat-cube-cell.available {
+      background: var(--seat-available-bg);
+      color: var(--primary-green);
+      border: 1.5px solid var(--seat-available-border);
     }
-    .seat-cube.available:hover {
-      transform: scale(1.06);
-      border-color: #2E7D32;
-    }
-    .seat-cube.occupied {
-      background: #FFE4E6;
+    .seat-cube-cell.occupied {
+      background: var(--seat-occupied-bg);
       color: #BE123C;
-      border: 2px solid #FDA4AF;
+      border: 1.5px solid var(--seat-occupied-border);
       cursor: not-allowed;
     }
-    .seat-cube.selected {
-      background: #FFD700;
+    .seat-cube-cell.selected {
+      background: var(--seat-selected-bg);
       color: #0A2E12;
-      border: 2px solid #B8860B;
+      border: 2px solid var(--seat-selected-border);
       transform: scale(1.08);
-      box-shadow: 0 4px 14px rgba(212,175,55,0.6);
-    }
-    .legend-row {
-      display: flex;
-      justify-content: center;
-      gap: 24px;
-      font-size: 13px;
-      font-weight: 600;
-      padding-top: 14px;
-      border-top: 1px solid var(--border);
-    }
-    .legend-tag {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .legend-color {
-      width: 16px;
-      height: 16px;
-      border-radius: 4px;
+      box-shadow: 0 4px 10px rgba(212,175,55,0.5);
     }
 
-    /* RIGHT COLUMN WIDGETS */
-    .clock-widget {
-      background: linear-gradient(135deg, #0A2E12, #1B5E20);
+    /* 7. DIGITAL STUDENT ID CARD */
+    .id-card-chassis {
+      background: linear-gradient(135deg, #071F0C 0%, #104318 60%, #1B5E20 100%);
       color: white;
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      text-align: center;
-      margin-bottom: 24px;
-      border: 1px solid var(--gold);
-    }
-    .clock-time {
-      font-size: 36px;
-      font-weight: 800;
-      font-family: monospace;
-      color: #FFD700;
-      margin: 8px 0;
-    }
-    .punch-btns {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 16px;
-    }
-    .btn-punch {
-      border: none;
-      padding: 12px;
-      border-radius: 10px;
-      font-weight: 800;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-punch-in {
-      background: #16A34A;
-      color: white;
-    }
-    .btn-punch-out {
-      background: #DC2626;
-      color: white;
-    }
-
-    /* ID CARD PREVIEW */
-    .id-card {
-      background: linear-gradient(135deg, #071F0C 0%, #1B5E20 70%, #2E7D32 100%);
-      color: white;
-      border-radius: 16px;
-      padding: 20px;
-      border: 2px solid var(--gold);
-      box-shadow: var(--shadow-md);
+      border-radius: 20px;
+      padding: 22px;
+      border: 2px solid var(--subtle-gold);
+      box-shadow: 0 10px 28px rgba(10, 46, 18, 0.35);
       position: relative;
     }
-    .id-head {
+    .id-card-top {
       display: flex;
       align-items: center;
       gap: 12px;
       border-bottom: 1px solid rgba(212,175,55,0.4);
-      padding-bottom: 12px;
-      margin-bottom: 14px;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
     }
-    .id-details {
-      font-size: 13px;
-      line-height: 1.6;
-    }
-    .id-barcode {
-      margin-top: 16px;
+    .id-barcode-footer {
+      margin-top: 18px;
       padding-top: 12px;
       border-top: 1px dashed rgba(255,255,255,0.3);
+      text-align: center;
       font-family: monospace;
       font-size: 14px;
       letter-spacing: 4px;
-      color: var(--gold);
-      text-align: center;
+      color: #FFD700;
     }
 
-    /* BUTTONS */
-    .btn-primary {
-      background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      box-shadow: 0 4px 12px rgba(27,94,32,0.25);
-      transition: all 0.2s;
-    }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(27,94,32,0.35);
-    }
-
-    /* MODAL */
-    .modal-overlay {
+    /* MODALS & DIALOGS */
+    .modal-backdrop {
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.65);
+      z-index: 2000;
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 2000;
-      padding: 20px;
+      padding: 16px;
     }
-    .modal-overlay.active {
+    .modal-backdrop.open {
       display: flex;
     }
-    .modal-box {
-      background: var(--surface);
-      max-width: 480px;
+    .modal-content-panel {
+      background: #FFFFFF;
       width: 100%;
+      max-width: 440px;
       border-radius: 20px;
-      padding: 28px;
-      box-shadow: var(--shadow-lg);
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: zoomIn 0.25s ease;
-    }
-    @keyframes zoomIn {
-      from { transform: scale(0.92); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    .pill {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-    .pill-green { background: #DCFCE7; color: #15803D; }
-    .pill-gold { background: #FEF3C7; color: #B45309; }
-
-    /* FOOTER */
-    footer {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
       padding: 24px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-top: 40px;
+      max-height: 88vh;
+      overflow-y: auto;
+      animation: modalSlide 0.25s ease;
+    }
+    @keyframes modalSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
   </style>
 </head>
 <body>
 
-  <!-- TOP BAR -->
-  <div class="top-strip">
-    <div class="top-strip-left">
-      <span class="badge-apk">OFFICIAL ANDROID APP</span>
-      <strong>Maa Durga Digital Library</strong> • 36 AC Seats & Real-time Biometric/QR Desk
+<div class="app-device-frame">
+
+  <!-- TOP PERSISTENT APK DOWNLOAD BAR -->
+  <div class="app-top-download-bar">
+    <div class="info-tag">
+      <span>🛡️</span>
+      <span>Official Android App • 36 AC Seats</span>
     </div>
-    <a href="./downloads/MaaDurgaLibrary.apk" download="MaaDurgaLibrary.apk" class="btn-download-hero">
+    <a href="./downloads/MaaDurgaLibrary.apk" download="MaaDurgaLibrary.apk" class="btn-download">
       <span>⬇️</span> Download APK (29 MB)
     </a>
   </div>
 
-  <!-- NAVIGATION -->
-  <nav class="main-nav">
-    <a href="#" class="brand-wrap">
-      <img src="assets/ic_digital_library_logo.jpg" alt="Logo" class="brand-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
-      <div class="brand-text">
-        <h1>Maa Durga Digital Library</h1>
-        <p>Managed by Vivek & Prince</p>
+  <!-- SCREEN 1: SPLASH SCREEN (Native Jetpack Compose Twin) -->
+  <div id="screen-splash" class="screen-view active-screen">
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+      <div class="splash-logo-box">
+        <img src="assets/ic_digital_library_logo.jpg" class="splash-logo-img" alt="Digital Library Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
       </div>
-    </a>
-    <div class="nav-tabs">
-      <button class="nav-tab-btn active" onclick="scrollToSection('seats-section')">36 Seats Plan</button>
-      <button class="nav-tab-btn" onclick="scrollToSection('attendance-section')">Live Attendance</button>
-      <button class="nav-tab-btn" onclick="scrollToSection('id-section')">Student ID</button>
-      <button class="btn-portal-role" onclick="openStudentModal()">Student Login / Register</button>
-      <button class="btn-portal-role" style="background:#B45309;" onclick="openAdminModal()">Admin Desk</button>
-    </div>
-  </nav>
-
-  <!-- MAIN CONTAINER -->
-  <div class="container">
-
-    <!-- HERO BANNER -->
-    <div class="hero-banner">
-      <div>
-        <span class="pill pill-gold" style="margin-bottom:10px;">★ PIN-DROP SILENT STUDY SANCTUARY ★</span>
-        <h2>Where Focus Meets Ambition</h2>
-        <p>Book your dedicated air-conditioned desk among 36 reserved seats with 4 customizable shifts, high-speed 5G WiFi, and real-time attendance tracking.</p>
-        <div class="creator-pill">
-          <span>✨</span> Created & Affiliated by Vivek & Prince
-        </div>
-      </div>
-      <div>
-        <a href="./downloads/MaaDurgaLibrary.apk" download="MaaDurgaLibrary.apk" class="btn-download-hero" style="font-size:15px; padding:12px 24px;">
-          <span>📱</span> Install Official Android App
-        </a>
-      </div>
+      <h1 class="splash-title">Digital Library</h1>
+      <div class="splash-sub">Maa Durga Digital Library</div>
+      <div class="splash-tagline">Your Space. Your Focus.</div>
+      <div class="spinner-ring"></div>
     </div>
 
-    <!-- MAIN TWO-COLUMN WORKSPACE -->
-    <div class="main-grid">
-
-      <!-- LEFT COLUMN: 36 SEATS FLOOR MAP -->
-      <div id="seats-section">
-        <div class="card">
-          <div class="card-title">
-            <span>36 Reserved AC Seats Floor Plan</span>
-            <span class="pill pill-green" id="avail-pill">31 Available</span>
-          </div>
-
-          <!-- Shift Selector Tabs -->
-          <div class="shift-row">
-            <div class="shift-box active" onclick="changeShift(1, this)">
-              <h4>Shift 1</h4>
-              <span>06:00 AM - 11:00 AM</span>
-            </div>
-            <div class="shift-box" onclick="changeShift(2, this)">
-              <h4>Shift 2</h4>
-              <span>11:00 AM - 04:00 PM</span>
-            </div>
-            <div class="shift-box" onclick="changeShift(3, this)">
-              <h4>Shift 3</h4>
-              <span>04:00 PM - 09:00 PM</span>
-            </div>
-            <div class="shift-box" onclick="changeShift(4, this)">
-              <h4>Shift 4</h4>
-              <span>09:00 PM - 06:00 AM</span>
-            </div>
-          </div>
-
-          <!-- Floor Plan Layout -->
-          <div class="desk-header">★ FRONT RECEPTION & ENTRANCE AISLE ★</div>
-          <div class="seats-grid" id="seats-container">
-            <!-- 36 Interactive Cubicles -->
-          </div>
-
-          <!-- Legend -->
-          <div class="legend-row">
-            <div class="legend-tag">
-              <div class="legend-color" style="background:#E8F5E9; border:2px solid #A5D6A7;"></div>
-              Available (₹400/m)
-            </div>
-            <div class="legend-tag">
-              <div class="legend-color" style="background:#FFE4E6; border:2px solid #FDA4AF;"></div>
-              Occupied
-            </div>
-            <div class="legend-tag">
-              <div class="legend-color" style="background:#FFD700; border:2px solid #B8860B;"></div>
-              Selected
-            </div>
-          </div>
-
-          <!-- Booking Action Bar -->
-          <div id="booking-bar" style="margin-top:20px; padding:16px; background:var(--primary-subtle); border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div style="font-size:12px; color:var(--text-muted); font-weight:700;">SELECTED SEAT</div>
-              <div style="font-size:20px; font-weight:800; color:var(--primary-dark);" id="selected-seat-title">Seat #02</div>
-            </div>
-            <button class="btn-primary" style="width:auto; padding:10px 24px;" onclick="openPaymentModal()">
-              Book & Pay via UPI ➔
-            </button>
-          </div>
-        </div>
-
-        <!-- NOTICE BOARD -->
-        <div class="card">
-          <div class="card-title">
-            <span>Notice Board 📢</span>
-            <span style="font-size:12px; color:var(--text-muted);">Updated by Desk</span>
-          </div>
-          <div style="background:#FFFBEB; border-left:4px solid var(--gold-dark); padding:14px; border-radius:0 8px 8px 0; font-size:14px;">
-            <strong>Maa Durga Digital Library Rules:</strong> Pin-drop silence strictly enforced in all 36 cubicles. High-speed 5G WiFi and power charging sockets enabled on all desks.
-          </div>
-        </div>
+    <!-- Bottom Developer Credit (Same as SplashScreen.kt) -->
+    <div>
+      <div class="splash-developer-badge">
+        <span>&lt;/&gt;</span>
+        <span>Created by Vivek & Prince</span>
       </div>
-
-      <!-- RIGHT COLUMN: ATTENDANCE & DIGITAL ID -->
-      <div>
-
-        <!-- REAL-TIME ATTENDANCE CLOCK -->
-        <div class="clock-widget" id="attendance-section">
-          <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#C8E6C9;">Live Indian Standard Time (IST)</div>
-          <div class="clock-time" id="clock-display">--:--:--</div>
-          <div style="font-size:13px; color:#E8F5E9;" id="date-display">Today</div>
-
-          <div class="punch-btns">
-            <button class="btn-punch btn-punch-in" onclick="punchAttendance('IN')">⏱️ PUNCH IN</button>
-            <button class="btn-punch btn-punch-out" onclick="punchAttendance('OUT')">🚪 PUNCH OUT</button>
-          </div>
-        </div>
-
-        <!-- DIGITAL ID CARD -->
-        <div class="card" id="id-section">
-          <div class="card-title">
-            <span>Digital Student ID Card</span>
-            <span class="pill pill-gold">ACTIVE PASS</span>
-          </div>
-          <div class="id-card">
-            <div class="id-head">
-              <img src="assets/ic_digital_library_logo.jpg" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--gold);" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
-              <div>
-                <div style="font-weight:800; font-size:14px;">MAA DURGA DIGITAL LIBRARY</div>
-                <div style="font-size:10px; color:var(--gold);">Affiliated & Managed by Vivek & Prince</div>
-              </div>
-            </div>
-            <div class="id-details">
-              <div><strong>Name:</strong> <span id="id-name">Vivek Verma</span></div>
-              <div><strong>Student ID:</strong> <span id="id-roll">MDDL-2026-0842</span></div>
-              <div><strong>Seat No:</strong> <span id="id-seat">Seat #02 (Shift 1)</span></div>
-              <div><strong>Validity:</strong> 31 Oct 2026</div>
-            </div>
-            <div class="id-barcode">
-              ||| | ||||| || |||| ||||| |||| || |||
-            </div>
-          </div>
-        </div>
-
-      </div>
-
+      <div style="font-size:11px; color:var(--charcoal-muted); margin-top:5px;">Lead App Developers</div>
     </div>
-
   </div>
 
-  <!-- PAYMENT & UPI MODAL -->
-  <div class="modal-overlay" id="pay-modal">
-    <div class="modal-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="font-size:18px; font-weight:800;">UPI Payment & Verification</h3>
-        <button onclick="closeModal('pay-modal')" style="background:none; border:none; font-size:22px; cursor:pointer;">✕</button>
+  <!-- SCREEN 2: WELCOME SCREEN (Pixel-perfect to WelcomeScreen.kt) -->
+  <div id="screen-welcome" class="screen-view">
+    <div style="text-align:center; padding:10px 0 20px;">
+      <div style="width:92px; height:92px; border-radius:50%; background:#FFFFFF; border:2px solid var(--subtle-gold-border); padding:4px; margin:0 auto;">
+        <img src="assets/ic_digital_library_logo.jpg" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
+      </div>
+      <div class="estd-pill">✦ ESTD. 2024 • MODERN STUDY SANCTUARY ✦</div>
+      <div style="font-size:17px; color:var(--charcoal-muted); margin-top:12px;">Welcome to</div>
+      <h2 style="font-size:24px; font-weight:800; color:var(--deep-forest-green); margin-top:2px;">Maa Durga Digital Library</h2>
+      <div style="font-size:13px; font-weight:700; color:var(--subtle-gold); margin-top:4px;">Read More • Learn More • Grow More</div>
+    </div>
+
+    <div style="padding:0 4px;">
+      <div style="font-size:19px; font-weight:800; color:var(--charcoal-heading);">Choose Your Access</div>
+      <div style="font-size:13px; color:var(--charcoal-muted); margin:4px 0 16px;">Select the portal that matches your role to continue</div>
+
+      <!-- 1. Student Card -->
+      <div class="welcome-card-option" onclick="navigateTo('screen-login')">
+        <div class="portal-icon-box student-icon-bg">📖</div>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3 style="font-size:18px; font-weight:800; color:var(--deep-forest-green);">Student</h3>
+            <span class="pill-role-tag student-tag">LEARNER / MEMBER</span>
+          </div>
+          <p style="font-size:12px; color:var(--charcoal-muted); margin-top:3px;">Self-study seats, shifts & digital library access</p>
+        </div>
+        <span style="font-size:18px; font-weight:800; color:var(--primary-green);">➔</span>
       </div>
 
-      <div style="background:var(--primary-subtle); padding:14px; border-radius:12px; margin-bottom:16px;">
+      <!-- 2. Administrator Card -->
+      <div class="welcome-card-option" onclick="navigateTo('screen-admin-login')">
+        <div class="portal-icon-box admin-icon-bg">🛡️</div>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3 style="font-size:18px; font-weight:800; color:#B45309;">Administrator</h3>
+            <span class="pill-role-tag admin-tag">DESK / STAFF</span>
+          </div>
+          <p style="font-size:12px; color:var(--charcoal-muted); margin-top:3px;">Manage student registrations, shifts, seats & notice board</p>
+        </div>
+        <span style="font-size:18px; font-weight:800; color:#B45309;">➔</span>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:auto; padding:20px 0 10px;">
+      <div class="splash-developer-badge" style="background:rgba(27,94,32,0.08); border-color:rgba(27,94,32,0.25);">
+        <span>&lt;/&gt;</span>
+        <span style="color:var(--primary-green);">Developed by Vivek & Prince</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: STUDENT LOGIN -->
+  <div id="screen-login" class="screen-view">
+    <div style="padding:16px 20px 0; display:flex; align-items:center; gap:12px;">
+      <button onclick="navigateTo('screen-welcome')" style="background:none; border:none; font-size:22px; cursor:pointer;">←</button>
+      <span style="font-weight:700; font-size:15px; color:var(--charcoal-muted);">Student Portal</span>
+    </div>
+
+    <div class="auth-container">
+      <h2 style="font-size:26px; font-weight:800; color:var(--deep-forest-green); margin-bottom:4px;">Welcome Back! 👋</h2>
+      <p style="font-size:13.5px; color:var(--charcoal-muted); margin-bottom:24px;">Sign in with your registered mobile to access desk</p>
+
+      <div class="form-group-field">
+        <label class="form-label">Mobile Number</label>
+        <div class="input-outline-box">
+          <span class="prefix-flag">+91</span>
+          <input type="tel" id="stu-login-mobile" placeholder="10-digit mobile number" maxlength="10">
+        </div>
+      </div>
+
+      <div class="form-group-field">
+        <label class="form-label">Password</label>
+        <div class="input-outline-box">
+          <input type="password" id="stu-login-password" placeholder="Enter password">
+          <span onclick="togglePassword('stu-login-password')" style="cursor:pointer; font-size:18px;">👁️</span>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-bottom:18px;">
+        <a href="#" onclick="navigateTo('screen-forgot')" style="font-size:13px; font-weight:700; color:var(--primary-green); text-decoration:none;">Forgot Password?</a>
+      </div>
+
+      <button class="btn-submit-green" onclick="submitStudentLogin()">
+        <span>Login to Library Desk</span> ➔
+      </button>
+
+      <div style="text-align:center; margin-top:24px; font-size:14px; color:var(--charcoal-muted);">
+        New to Maa Durga Digital Library? 
+        <a href="#" onclick="navigateTo('screen-register')" style="font-weight:800; color:var(--primary-green); text-decoration:none;">Register Now</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: STUDENT REGISTER -->
+  <div id="screen-register" class="screen-view">
+    <div style="padding:16px 20px 0; display:flex; align-items:center; gap:12px;">
+      <button onclick="navigateTo('screen-login')" style="background:none; border:none; font-size:22px; cursor:pointer;">←</button>
+      <span style="font-weight:700; font-size:15px; color:var(--charcoal-muted);">New Registration</span>
+    </div>
+
+    <div class="auth-container">
+      <h2 style="font-size:24px; font-weight:800; color:var(--deep-forest-green); margin-bottom:4px;">Join Digital Library</h2>
+      <p style="font-size:13px; color:var(--charcoal-muted); margin-bottom:20px;">Create your profile for seat reservation & attendance</p>
+
+      <div class="form-group-field">
+        <label class="form-label">Full Name</label>
+        <div class="input-outline-box">
+          <input type="text" id="reg-name" placeholder="Enter student full name">
+        </div>
+      </div>
+
+      <div class="form-group-field">
+        <label class="form-label">10-Digit Mobile Number</label>
+        <div class="input-outline-box">
+          <span class="prefix-flag">+91</span>
+          <input type="tel" id="reg-mobile" placeholder="Mobile number" maxlength="10">
+        </div>
+      </div>
+
+      <div class="form-group-field">
+        <label class="form-label">Create Password</label>
+        <div class="input-outline-box">
+          <input type="password" id="reg-pwd" placeholder="At least 6 characters">
+          <span onclick="togglePassword('reg-pwd')" style="cursor:pointer; font-size:18px;">👁️</span>
+        </div>
+      </div>
+
+      <button class="btn-submit-green" onclick="submitStudentRegister()">
+        <span>Complete Registration</span> ➔
+      </button>
+
+      <div style="text-align:center; margin-top:20px; font-size:14px; color:var(--charcoal-muted);">
+        Already registered? 
+        <a href="#" onclick="navigateTo('screen-login')" style="font-weight:800; color:var(--primary-green); text-decoration:none;">Login here</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: FORGOT PASSWORD -->
+  <div id="screen-forgot" class="screen-view">
+    <div style="padding:16px 20px 0; display:flex; align-items:center; gap:12px;">
+      <button onclick="navigateTo('screen-login')" style="background:none; border:none; font-size:22px; cursor:pointer;">←</button>
+      <span style="font-weight:700; font-size:15px; color:var(--charcoal-muted);">Password Reset</span>
+    </div>
+
+    <div class="auth-container">
+      <h2 style="font-size:22px; font-weight:800; color:var(--deep-forest-green); margin-bottom:4px;">Reset Request</h2>
+      <p style="font-size:13px; color:var(--charcoal-muted); margin-bottom:20px;">Request forwarded securely to Library Admin for approval</p>
+
+      <div class="form-group-field">
+        <label class="form-label">Registered Mobile Number</label>
+        <div class="input-outline-box">
+          <span class="prefix-flag">+91</span>
+          <input type="tel" id="forgot-mobile" placeholder="10-digit mobile" maxlength="10">
+        </div>
+      </div>
+
+      <div class="form-group-field">
+        <label class="form-label">New Password</label>
+        <div class="input-outline-box">
+          <input type="password" id="forgot-pwd" placeholder="Enter new password">
+        </div>
+      </div>
+
+      <button class="btn-submit-green" onclick="submitForgotRequest()">
+        <span>Submit Request to Admin</span> ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- SCREEN 6: ADMIN LOGIN -->
+  <div id="screen-admin-login" class="screen-view">
+    <div style="padding:16px 20px 0; display:flex; align-items:center; gap:12px;">
+      <button onclick="navigateTo('screen-welcome')" style="background:none; border:none; font-size:22px; cursor:pointer;">←</button>
+      <span style="font-weight:700; font-size:15px; color:#B45309;">Administrator Desk</span>
+    </div>
+
+    <div class="auth-container">
+      <h2 style="font-size:24px; font-weight:800; color:#B45309; margin-bottom:4px;">Authorized Personnel Only</h2>
+      <p style="font-size:13px; color:var(--charcoal-muted); margin-bottom:20px;">Desk Operations for Vivek & Prince</p>
+
+      <div class="form-group-field">
+        <label class="form-label">Admin Security Key</label>
+        <div class="input-outline-box">
+          <input type="password" id="admin-sec-key" placeholder="Enter Master Key (MDDL@ADMIN2026)">
+        </div>
+        <div style="font-size:11px; color:var(--charcoal-muted); margin-top:5px;">Desk Key: MDDL@ADMIN2026 or ADMIN9569</div>
+      </div>
+
+      <button class="btn-submit-green" style="background:#B45309;" onclick="submitAdminLogin()">
+        <span>Unlock Administrator Desk</span> ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- SCREEN 7: STUDENT MAIN APP CONTAINER WITH 5 TABS -->
+  <div id="screen-student-app" class="screen-view has-nav">
+
+    <!-- Top Bar -->
+    <div class="student-header-topbar">
+      <div>
+        <div style="font-size:11px; color:var(--charcoal-muted); font-weight:700;">Welcome,</div>
+        <div style="font-size:16px; font-weight:800; color:var(--charcoal-heading);" id="student-name-header">Vivek Verma 👋</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button onclick="showAnnouncementModal()" style="width:36px; height:36px; border-radius:50%; border:1px solid #E2E8F0; background:#FFFFFF; cursor:pointer; font-size:16px;">🔔</button>
+        <button onclick="logoutStudent()" style="width:36px; height:36px; border-radius:50%; border:1px solid #E2E8F0; background:#FFFFFF; cursor:pointer; font-size:16px;" title="Logout">🚪</button>
+      </div>
+    </div>
+
+    <!-- TAB 1: HOME TAB (Pixel-perfect to StudentHomeScreen.kt) -->
+    <div id="tab-home" class="home-scroll-pad">
+      <!-- Active Membership Card -->
+      <div class="membership-gradient-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:12px; font-weight:700; opacity:0.85;">MEMBERSHIP</span>
+          <span class="membership-status-pill">ACTIVE</span>
+        </div>
+        <div style="font-size:26px; font-weight:800; margin:10px 0 2px;" id="home-seat-badge">Seat #02</div>
+        <div style="font-size:13px; opacity:0.9;" id="home-shift-badge">Shift 1 (06:00 AM - 11:00 AM)</div>
+        <div style="font-size:12px; color:#FFE082; margin-top:8px;">Valid till: <strong>31 Oct 2026</strong></div>
+      </div>
+
+      <!-- Today's Attendance Punch Box -->
+      <div class="seat-hall-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <span style="font-weight:800; font-size:15px;">Today's Attendance</span>
+          <span style="font-size:11px; font-weight:800; color:var(--primary-green);" id="today-punch-status">PUNCHED IN</span>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <button class="btn-submit-green" style="height:42px; margin:0;" onclick="punchLive('IN')">⏱️ PUNCH IN</button>
+          <button class="btn-submit-green" style="height:42px; margin:0; background:#DC2626;" onclick="punchLive('OUT')">🚪 PUNCH OUT</button>
+        </div>
+      </div>
+
+      <!-- Quick Services Grid -->
+      <div style="font-size:16px; font-weight:800; margin-bottom:12px;">Library Services</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="seat-hall-card" style="margin:0; padding:14px; cursor:pointer;" onclick="switchNavTab('seats')">
+          <div style="font-size:24px;">🪑</div>
+          <div style="font-weight:800; font-size:14px; margin-top:4px;">36 Seats Map</div>
+          <div style="font-size:11px; color:var(--charcoal-muted);">Pick study cubicle</div>
+        </div>
+        <div class="seat-hall-card" style="margin:0; padding:14px; cursor:pointer;" onclick="switchNavTab('attendance')">
+          <div style="font-size:24px;">⏱️</div>
+          <div style="font-weight:800; font-size:14px; margin-top:4px;">Attendance</div>
+          <div style="font-size:11px; color:var(--charcoal-muted);">View records & clock</div>
+        </div>
+        <div class="seat-hall-card" style="margin:0; padding:14px; cursor:pointer;" onclick="switchNavTab('payments')">
+          <div style="font-size:24px;">💳</div>
+          <div style="font-weight:800; font-size:14px; margin-top:4px;">UPI Payment</div>
+          <div style="font-size:11px; color:var(--charcoal-muted);">Pay fees & receipts</div>
+        </div>
+        <div class="seat-hall-card" style="margin:0; padding:14px; cursor:pointer;" onclick="switchNavTab('profile')">
+          <div style="font-size:24px;">🪪</div>
+          <div style="font-weight:800; font-size:14px; margin-top:4px;">Digital ID Card</div>
+          <div style="font-size:11px; color:var(--charcoal-muted);">Barcode & roll</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: SEATS TAB (36 Seats Floor Map) -->
+    <div id="tab-seats" class="home-scroll-pad" style="display:none;">
+      <div style="font-size:18px; font-weight:800; margin-bottom:12px;">36 Reserved AC Seats</div>
+
+      <!-- Shift Switcher -->
+      <div class="shift-toggle-row">
+        <div class="shift-chip selected-shift" onclick="setShift(1, this)">Shift 1<br><small>6AM-11AM</small></div>
+        <div class="shift-chip" onclick="setShift(2, this)">Shift 2<br><small>11AM-4PM</small></div>
+        <div class="shift-chip" onclick="setShift(3, this)">Shift 3<br><small>4PM-9PM</small></div>
+        <div class="shift-chip" onclick="setShift(4, this)">Shift 4<br><small>9PM-6AM</small></div>
+      </div>
+
+      <!-- 36 Cubicles Grid -->
+      <div class="seat-hall-card">
+        <div class="hall-aisle-header">★ FRONT RECEPTION & STUDY AISLE ★</div>
+        <div class="seat-cubicles-grid" id="cubicles-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Selected Seat Action -->
+      <div class="seat-hall-card" id="seat-selection-action-box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:11px; color:var(--charcoal-muted); font-weight:700;">CHOSEN CUBICLE</div>
+            <div style="font-size:20px; font-weight:800; color:var(--primary-green);" id="active-chosen-seat">Seat #02</div>
+          </div>
+          <button class="btn-submit-green" style="width:auto; padding:0 20px; margin:0;" onclick="openPaymentBottomSheet()">
+            Pay via UPI ➔
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: ATTENDANCE TAB -->
+    <div id="tab-attendance" class="home-scroll-pad" style="display:none;">
+      <div style="font-size:18px; font-weight:800; margin-bottom:12px;">Attendance Tracker</div>
+      <div class="seat-hall-card" style="text-align:center; padding:24px;">
+        <div style="font-size:12px; color:var(--charcoal-muted); font-weight:700;">INDIAN STANDARD TIME</div>
+        <div style="font-size:36px; font-weight:800; font-family:monospace; color:var(--primary-green); margin:8px 0;" id="live-ist-clock">--:--:--</div>
+        <div style="font-size:13px; color:var(--charcoal-muted);" id="live-ist-date">Today</div>
+      </div>
+
+      <div style="font-size:15px; font-weight:800; margin:16px 0 8px;">Recent Records</div>
+      <div id="attendance-records-list">
+        <div class="seat-hall-card" style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:800; font-size:14px;">Today</div>
+            <div style="font-size:12px; color:var(--charcoal-muted);">Punch In: 08:15 AM • Punch Out: Active</div>
+          </div>
+          <span class="pill-role-tag student-tag">PRESENT</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: PAYMENTS TAB -->
+    <div id="tab-payments" class="home-scroll-pad" style="display:none;">
+      <div style="font-size:18px; font-weight:800; margin-bottom:12px;">UPI Payments & Receipts</div>
+      <div class="seat-hall-card">
+        <div style="font-weight:800; font-size:15px; margin-bottom:6px;">Submit Monthly Fees</div>
+        <p style="font-size:13px; color:var(--charcoal-muted); margin-bottom:14px;">Direct UPI QR code payment with automatic seat allocation verification.</p>
+        <button class="btn-submit-green" onclick="openPaymentBottomSheet()">Open UPI QR & Submit UTR</button>
+      </div>
+
+      <div style="font-size:15px; font-weight:800; margin:16px 0 8px;">Payment History</div>
+      <div class="seat-hall-card" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:800;">₹400 • Seat #02 (Shift 1)</div>
+          <div style="font-size:12px; color:var(--charcoal-muted);">UTR: 423987123984 • 01 Oct 2026</div>
+        </div>
+        <span class="pill-role-tag student-tag">VERIFIED</span>
+      </div>
+    </div>
+
+    <!-- TAB 5: PROFILE TAB (Digital ID Card) -->
+    <div id="tab-profile" class="home-scroll-pad" style="display:none;">
+      <div style="font-size:18px; font-weight:800; margin-bottom:12px;">Student Profile & ID</div>
+      
+      <div class="id-card-chassis">
+        <div class="id-card-top">
+          <img src="assets/ic_digital_library_logo.jpg" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--subtle-gold);" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
+          <div>
+            <div style="font-size:14px; font-weight:800; color:#FFFFFF;">MAA DURGA DIGITAL LIBRARY</div>
+            <div style="font-size:10px; color:#FFE082;">Managed by Vivek & Prince • ISO Certified Study Hub</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:14px; align-items:center;">
+          <div style="width:70px; height:85px; border-radius:10px; background:#FFFFFF; border:2px solid var(--subtle-gold); display:flex; align-items:center; justify-content:center; font-size:30px;">
+            🎓
+          </div>
+          <div style="font-size:13px; line-height:1.6;">
+            <div><strong>Name:</strong> <span id="id-disp-name">Vivek Verma</span></div>
+            <div><strong>Roll ID:</strong> <span id="id-disp-roll">MDDL-2026-3445</span></div>
+            <div><strong>Seat:</strong> <span id="id-disp-seat">Seat #02 (Shift 1)</span></div>
+            <div><strong>Validity:</strong> 31 Oct 2026</div>
+          </div>
+        </div>
+
+        <div class="id-barcode-footer">
+          ||| | ||||| || |||| ||||| |||| || |||
+          <div style="font-size:10px; margin-top:4px; letter-spacing:1px;">OFFICIAL STUDENT CREDENTIAL</div>
+        </div>
+      </div>
+
+      <button class="btn-submit-green" style="margin-top:20px; background:#DC2626;" onclick="logoutStudent()">
+        Sign Out from Desk
+      </button>
+    </div>
+
+    <!-- M3 BOTTOM NAVIGATION (5 Tabs matching Android MainActivity) -->
+    <div class="m3-bottom-nav">
+      <div class="m3-nav-item active" id="nav-btn-home" onclick="switchNavTab('home')">
+        <div class="icon-box">🏠</div>
+        <span>Home</span>
+      </div>
+      <div class="m3-nav-item" id="nav-btn-seats" onclick="switchNavTab('seats')">
+        <div class="icon-box">🪑</div>
+        <span>Seats</span>
+      </div>
+      <div class="m3-nav-item" id="nav-btn-attendance" onclick="switchNavTab('attendance')">
+        <div class="icon-box">⏱️</div>
+        <span>Attendance</span>
+      </div>
+      <div class="m3-nav-item" id="nav-btn-payments" onclick="switchNavTab('payments')">
+        <div class="icon-box">💳</div>
+        <span>Payments</span>
+      </div>
+      <div class="m3-nav-item" id="nav-btn-profile" onclick="switchNavTab('profile')">
+        <div class="icon-box">🪪</div>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 8: ADMIN DESK DASHBOARD -->
+  <div id="screen-admin-dash" class="screen-view">
+    <div style="background:#B45309; color:white; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:800; font-size:14px;">🛡️ ADMIN DESK • VIVEK & PRINCE</span>
+      <button onclick="navigateTo('screen-welcome')" style="background:none; border:none; color:white; font-weight:700; font-size:12px; cursor:pointer;">Exit Desk</button>
+    </div>
+
+    <div class="home-scroll-pad">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+        <div class="seat-hall-card" style="margin:0; padding:14px;">
+          <div style="font-size:12px; color:var(--charcoal-muted);">Total Active Students</div>
+          <div style="font-size:24px; font-weight:800; color:var(--primary-green);">12</div>
+        </div>
+        <div class="seat-hall-card" style="margin:0; padding:14px;">
+          <div style="font-size:12px; color:var(--charcoal-muted);">Occupied Seats</div>
+          <div style="font-size:24px; font-weight:800; color:var(--primary-green);">5 / 36</div>
+        </div>
+      </div>
+
+      <div style="font-size:16px; font-weight:800; margin-bottom:8px;">Pending Payment Verifications</div>
+      <div class="seat-hall-card" id="admin-pending-box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong>Aman Sharma (+91 9876543210)</strong>
+          <span class="pill-role-tag admin-tag">PENDING</span>
+        </div>
+        <div style="font-size:12px; color:var(--charcoal-muted); margin:4px 0;">Seat #05 • Shift 1 • ₹400 via UPI (UTR: 329847291823)</div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button class="btn-submit-green" style="height:36px; margin:0; font-size:12px;" onclick="approveAdminPayment(this)">Approve & Allot Seat</button>
+          <button class="btn-submit-green" style="height:36px; margin:0; font-size:12px; background:#DC2626;" onclick="this.parentElement.parentElement.remove()">Reject</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT & UPI QR MODAL -->
+  <div class="modal-backdrop" id="modal-upi-pay">
+    <div class="modal-content-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="font-size:18px; font-weight:800;">UPI Payment Proof</h3>
+        <button onclick="closeModal('modal-upi-pay')" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="background:var(--surface-variant); padding:12px; border-radius:12px; margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between;">
-          <strong>Seat:</strong>
-          <span id="modal-seat-label" style="color:var(--primary); font-weight:800;">Seat #02</span>
+          <span>Selected Seat:</span>
+          <strong id="modal-seat-title">Seat #02</strong>
         </div>
         <div style="display:flex; justify-content:space-between; margin-top:4px;">
-          <strong>Shift:</strong>
-          <span id="modal-shift-label">Shift 1</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:16px;">
-          <strong>Amount Due:</strong>
-          <span style="color:var(--primary); font-weight:800;">₹400 / Month</span>
+          <span>Monthly Plan Fee:</span>
+          <strong style="color:var(--primary-green);">₹400</strong>
         </div>
       </div>
 
-      <div style="text-align:center; padding:14px; border:1px dashed var(--border); border-radius:12px; margin-bottom:16px;">
-        <div style="font-size:12px; color:var(--text-muted); font-weight:700;">SCAN WITH ANY UPI APP (PhonePe / GPay / Paytm)</div>
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=9569733445@okbizaxis&pn=MaaDurgaDigitalLibrary&am=400" style="margin:12px auto; display:block; border-radius:8px;">
-        <div style="font-size:13px; font-weight:700; color:var(--primary-dark);">UPI ID: 9569733445@okbizaxis</div>
+      <div style="text-align:center; padding:12px; border:1px dashed #CBD5E1; border-radius:12px; margin-bottom:14px;">
+        <div style="font-size:11.5px; font-weight:700; color:var(--charcoal-muted);">SCAN TO PAY VIA ANY UPI APP (PhonePe / GPay)</div>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=9569733445@okbizaxis&pn=MaaDurgaDigitalLibrary&am=400" style="margin:10px auto; display:block; border-radius:8px;">
+        <div style="font-size:12px; font-weight:800; color:var(--deep-forest-green);">UPI ID: 9569733445@okbizaxis</div>
       </div>
 
-      <div style="margin-bottom:16px;">
-        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">12-Digit UPI Transaction ID / UTR</label>
-        <input type="text" id="utr-input" placeholder="e.g. 423987123984" style="width:100%; height:44px; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px;">
+      <div class="form-group-field">
+        <label class="form-label">12-Digit UPI Transaction / UTR Number</label>
+        <div class="input-outline-box">
+          <input type="text" id="modal-utr-input" placeholder="e.g. 423987123984" maxlength="12">
+        </div>
       </div>
 
-      <button class="btn-primary" onclick="submitPayment()">Submit Verification Proof ➔</button>
+      <button class="btn-submit-green" onclick="submitUpiProof()">Submit Verification Proof ➔</button>
     </div>
   </div>
 
-  <!-- STUDENT MODAL -->
-  <div class="modal-overlay" id="student-modal">
-    <div class="modal-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="font-size:18px; font-weight:800;">Student Portal Login</h3>
-        <button onclick="closeModal('student-modal')" style="background:none; border:none; font-size:22px; cursor:pointer;">✕</button>
-      </div>
+</div>
 
-      <div style="margin-bottom:14px;">
-        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">10-Digit Mobile Number</label>
-        <input type="tel" id="stu-mobile" placeholder="e.g. 9569733445" style="width:100%; height:44px; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px;">
-      </div>
+<script>
+  let activeShift = 1;
+  let currentChosenSeat = '02';
+  const seatOccupancy = {
+    1: { '01': true, '04': true, '12': true, '24': true, '30': true },
+    2: { '02': true, '05': true, '15': true },
+    3: { '07': true, '08': true },
+    4: { '01': true, '18': true }
+  };
 
-      <div style="margin-bottom:16px;">
-        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">Password</label>
-        <input type="password" id="stu-pwd" placeholder="Enter password" style="width:100%; height:44px; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px;">
-      </div>
+  function navigateTo(screenId) {
+    document.querySelectorAll('.screen-view').forEach(s => s.classList.remove('active-screen'));
+    const target = document.getElementById(screenId);
+    if (target) target.classList.add('active-screen');
+  }
 
-      <button class="btn-primary" onclick="loginStudent()">Sign In to Desk ➔</button>
-    </div>
-  </div>
-
-  <!-- ADMIN MODAL -->
-  <div class="modal-overlay" id="admin-modal">
-    <div class="modal-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="font-size:18px; font-weight:800;">Administrator Desk Access</h3>
-        <button onclick="closeModal('admin-modal')" style="background:none; border:none; font-size:22px; cursor:pointer;">✕</button>
-      </div>
-
-      <div style="margin-bottom:16px;">
-        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">Master Security Key</label>
-        <input type="password" id="adm-key" placeholder="Enter master key (MDDL@ADMIN2026)" style="width:100%; height:44px; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px;">
-      </div>
-
-      <button class="btn-primary" style="background:#B45309;" onclick="loginAdmin()">Unlock Admin Desk ➔</button>
-    </div>
-  </div>
-
-  <footer>
-    <div style="font-weight:700; color:var(--primary-dark); font-size:15px; margin-bottom:4px;">MAA DURGA DIGITAL LIBRARY</div>
-    <div>Managed & Affiliated by <strong>Vivek & Prince</strong></div>
-    <div style="margin-top:8px;">36 Reserved AC Seats • 4 Shifts • High-Speed WiFi • In-Library Power Supply</div>
-  </footer>
-
-  <script>
-    let currentShift = 1;
-    let selectedSeat = '02';
-    const seatsData = {
-      1: { '01': 'OCCUPIED', '04': 'OCCUPIED', '12': 'OCCUPIED', '24': 'OCCUPIED', '30': 'OCCUPIED' },
-      2: { '02': 'OCCUPIED', '05': 'OCCUPIED', '15': 'OCCUPIED' },
-      3: { '07': 'OCCUPIED', '08': 'OCCUPIED' },
-      4: { '01': 'OCCUPIED', '18': 'OCCUPIED' }
-    };
-
-    function renderSeats() {
-      const container = document.getElementById('seats-container');
-      container.innerHTML = '';
-      const occupiedMap = seatsData[currentShift] || {};
-      let avail = 0;
-
-      for (let i = 1; i <= 36; i++) {
-        const seatNo = i < 10 ? '0' + i : '' + i;
-        const isOccupied = occupiedMap[seatNo] === 'OCCUPIED';
-        const isSelected = selectedSeat === seatNo;
-
-        if (!isOccupied) avail++;
-
-        const div = document.createElement('div');
-        div.className = `seat-cube ${isOccupied ? 'occupied' : 'available'} ${isSelected ? 'selected' : ''}`;
-        div.innerText = seatNo;
-
-        if (!isOccupied) {
-          div.onclick = () => {
-            selectedSeat = seatNo;
-            document.getElementById('selected-seat-title').innerText = 'Seat #' + seatNo;
-            renderSeats();
-          };
-        }
-        container.appendChild(div);
-      }
-
-      document.getElementById('avail-pill').innerText = avail + ' Available';
-    }
-
-    function changeShift(num, el) {
-      currentShift = num;
-      document.querySelectorAll('.shift-box').forEach(b => b.classList.remove('active'));
-      if (el) el.classList.add('active');
-      renderSeats();
-    }
-
-    function updateLiveClock() {
-      const now = new Date();
-      document.getElementById('clock-display').innerText = now.toLocaleTimeString('en-US', { hour12: true });
-      document.getElementById('date-display').innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
-    }
-
-    function punchAttendance(type) {
-      const now = new Date();
-      const time = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
-      alert(`✅ Attendance Recorded: PUNCH ${type} at ${time}`);
-    }
-
-    function openPaymentModal() {
-      document.getElementById('modal-seat-label').innerText = 'Seat #' + selectedSeat;
-      document.getElementById('modal-shift-label').innerText = 'Shift ' + currentShift;
-      document.getElementById('pay-modal').classList.add('active');
-    }
-
-    function openStudentModal() {
-      document.getElementById('student-modal').classList.add('active');
-    }
-
-    function openAdminModal() {
-      document.getElementById('admin-modal').classList.add('active');
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('active');
-    }
-
-    function submitPayment() {
-      const utr = document.getElementById('utr-input').value.trim();
-      if (utr.length < 6) {
-        alert('Please enter a valid 12-digit UPI UTR number.');
-        return;
-      }
-      closeModal('pay-modal');
-      alert(`🎉 Payment proof for Seat #${selectedSeat} submitted! The Admin desk will verify and lock your seat.`);
-    }
-
-    function loginStudent() {
-      const mobile = document.getElementById('stu-mobile').value.trim();
-      if (mobile.length !== 10) {
-        alert('Please enter a valid 10-digit mobile number.');
-        return;
-      }
-      document.getElementById('id-name').innerText = 'Student (' + mobile.slice(-4) + ')';
-      document.getElementById('id-seat').innerText = 'Seat #' + selectedSeat + ' (Shift ' + currentShift + ')';
-      closeModal('student-modal');
-      alert('Welcome! Student portal credentials authenticated.');
-    }
-
-    function loginAdmin() {
-      const key = document.getElementById('adm-key').value.trim();
-      if (key === 'MDDL@ADMIN2026' || key === 'ADMIN9569' || key.toLowerCase() === 'admin') {
-        closeModal('admin-modal');
-        alert('Admin Desk unlocked! Vivek & Prince Administrative privileges active.');
-      } else {
-        alert('Invalid Security Key.');
-      }
-    }
-
-    function scrollToSection(id) {
-      const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      renderSeats();
-      updateLiveClock();
-      setInterval(updateLiveClock, 1000);
+  function switchNavTab(tabName) {
+    ['home', 'seats', 'attendance', 'payments', 'profile'].forEach(t => {
+      const panel = document.getElementById('tab-' + t);
+      const btn = document.getElementById('nav-btn-' + t);
+      if (panel) panel.style.display = (t === tabName) ? 'block' : 'none';
+      if (btn) btn.classList.toggle('active', t === tabName);
     });
-  </script>
+  }
+
+  function render36Cubicles() {
+    const grid = document.getElementById('cubicles-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const occ = seatOccupancy[activeShift] || {};
+
+    for (let i = 1; i <= 36; i++) {
+      const numStr = i < 10 ? '0' + i : '' + i;
+      const isOcc = occ[numStr];
+      const isSel = currentChosenSeat === numStr;
+
+      const div = document.createElement('div');
+      div.className = `seat-cube-cell ${isOcc ? 'occupied' : 'available'} ${isSel ? 'selected' : ''}`;
+      div.innerText = numStr;
+
+      if (!isOcc) {
+        div.onclick = () => {
+          currentChosenSeat = numStr;
+          document.getElementById('active-chosen-seat').innerText = 'Seat #' + numStr;
+          render36Cubicles();
+        };
+      }
+      grid.appendChild(div);
+    }
+  }
+
+  function setShift(shiftNum, el) {
+    activeShift = shiftNum;
+    document.querySelectorAll('.shift-chip').forEach(c => c.classList.remove('selected-shift'));
+    if (el) el.classList.add('selected-shift');
+    render36Cubicles();
+  }
+
+  function submitStudentLogin() {
+    const mob = document.getElementById('stu-login-mobile').value.trim();
+    if (mob.length !== 10) {
+      alert('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    document.getElementById('student-name-header').innerText = `Student (${mob.slice(-4)}) 👋`;
+    document.getElementById('id-disp-roll').innerText = `MDDL-2026-${mob.slice(-4)}`;
+    navigateTo('screen-student-app');
+    switchNavTab('home');
+  }
+
+  function submitStudentRegister() {
+    const name = document.getElementById('reg-name').value.trim();
+    const mob = document.getElementById('reg-mobile').value.trim();
+    if (!name || mob.length !== 10) {
+      alert('Please enter your full name and 10-digit mobile.');
+      return;
+    }
+    document.getElementById('student-name-header').innerText = `${name} 👋`;
+    document.getElementById('id-disp-name').innerText = name;
+    document.getElementById('id-disp-roll').innerText = `MDDL-2026-${mob.slice(-4)}`;
+    navigateTo('screen-student-app');
+    switchNavTab('home');
+  }
+
+  function submitForgotRequest() {
+    alert('Password reset request securely forwarded to Admin queue for verification.');
+    navigateTo('screen-login');
+  }
+
+  function submitAdminLogin() {
+    const key = document.getElementById('admin-sec-key').value.trim();
+    if (key === 'MDDL@ADMIN2026' || key === 'ADMIN9569' || key.toLowerCase() === 'admin') {
+      navigateTo('screen-admin-dash');
+    } else {
+      alert('Invalid Security Key.');
+    }
+  }
+
+  function logoutStudent() {
+    navigateTo('screen-welcome');
+  }
+
+  function punchLive(type) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
+    document.getElementById('today-punch-status').innerText = (type === 'IN') ? 'PUNCHED IN' : 'PUNCHED OUT';
+    alert(`✅ Attendance PUNCH ${type} recorded successfully at ${timeStr}`);
+  }
+
+  function openPaymentBottomSheet() {
+    document.getElementById('modal-seat-title').innerText = 'Seat #' + currentChosenSeat;
+    document.getElementById('modal-upi-pay').classList.add('open');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  function submitUpiProof() {
+    const utr = document.getElementById('modal-utr-input').value.trim();
+    if (utr.length < 6) {
+      alert('Please enter a valid 12-digit UTR number.');
+      return;
+    }
+    closeModal('modal-upi-pay');
+    alert(`🎉 Payment proof for Seat #${currentChosenSeat} submitted! The Admin desk will verify and lock your seat.`);
+  }
+
+  function approveAdminPayment(btn) {
+    btn.innerText = 'Approved ✓';
+    btn.style.background = '#15803D';
+    btn.disabled = true;
+    alert('Payment verified! Seat officially allocated.');
+  }
+
+  function showAnnouncementModal() {
+    alert('📢 Library Desk: Silent study environment active. High-speed WiFi enabled.');
+  }
+
+  function togglePassword(id) {
+    const input = document.getElementById(id);
+    if (input) input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  function updateClock() {
+    const now = new Date();
+    const cEl = document.getElementById('live-ist-clock');
+    const dEl = document.getElementById('live-ist-date');
+    if (cEl) cEl.innerText = now.toLocaleTimeString('en-US', { hour12: true });
+    if (dEl) dEl.innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    render36Cubicles();
+    setInterval(updateClock, 1000);
+    // Transition from Splash to Welcome after 1.5s
+    setTimeout(() => {
+      navigateTo('screen-welcome');
+    }, 1500);
+  });
+</script>
 </body>
 </html>
