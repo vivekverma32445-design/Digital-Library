@@ -71,7 +71,17 @@ const INITIAL_ANNOUNCEMENTS = [
 ];
 
 // In-Memory Reactive State
-let currentUser = getLocal("currentUser", null);
+const defaultStudentUser = {
+  id: "DL-2026-10492",
+  fullName: "Vivek Verma",
+  mobile: "9876543210",
+  email: "vivek.study@gmail.com",
+  gender: "Male",
+  passwordHash: "student123",
+  role: "STUDENT"
+};
+
+let currentUser = getLocal("currentUser", defaultStudentUser);
 let isAdmin = getLocal("isAdmin", false);
 let activeShift = 1;
 let currentChosenSeat = "02";
@@ -99,7 +109,8 @@ let registeredUsers = getLocal("registeredUsers", [
     gender: "Other",
     passwordHash: "M@n1shyadav",
     role: "ADMIN"
-  }
+  },
+  defaultStudentUser
 ]);
 
 // Initialize default sample student if none exists
@@ -1453,16 +1464,52 @@ function replyToComplaint(idx) {
   switchAdminTab('Complaints');
 }
 
-// --- 20. MODAL UTILITIES ---
+// --- 20. MODAL UTILITIES & MODE SWITCHER ---
+
+function switchMode(mode) {
+  if (mode === 'admin') {
+    navigateTo('screen-admin-dash');
+    switchAdminTab('Dashboard');
+    const stuPill = document.getElementById('pill-mode-student');
+    const admPill = document.getElementById('pill-mode-admin');
+    if (stuPill) stuPill.classList.remove('active-pill');
+    if (admPill) admPill.classList.add('active-pill');
+  } else {
+    updateStudentUI();
+    navigateTo('screen-student-app');
+    switchNavTab('home');
+    const stuPill = document.getElementById('pill-mode-student');
+    const admPill = document.getElementById('pill-mode-admin');
+    if (stuPill) stuPill.classList.add('active-pill');
+    if (admPill) admPill.classList.remove('active-pill');
+  }
+}
 
 function openModal(id) {
   const el = document.getElementById(id);
-  if (el) el.classList.add('open');
+  if (el) {
+    el.classList.add('active-modal');
+    el.classList.add('open');
+  }
 }
 
 function closeModal(id) {
   const el = document.getElementById(id);
-  if (el) el.classList.remove('open');
+  if (el) {
+    el.classList.remove('active-modal');
+    el.classList.remove('open');
+  }
+}
+
+function toggleAppTheme() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  if (isDark) {
+    document.body.setAttribute('data-theme', 'dark');
+  } else {
+    document.body.removeAttribute('data-theme');
+  }
+  setLocal('isDarkTheme', isDark);
+  showToast(isDark ? "Dark theme enabled 🌙" : "Light theme enabled ☀️");
 }
 
 function togglePasswordVis(inputId) {
@@ -1489,19 +1536,31 @@ window.addEventListener('DOMContentLoaded', () => {
   // Restore Theme
   if (getLocal('isDarkTheme', false)) {
     document.body.classList.add('dark-mode');
+    document.body.setAttribute('data-theme', 'dark');
   }
 
   render36Cubicles();
   renderAnnouncementsList();
 
-  // Transition from Splash to destination after 2s
-  setTimeout(() => {
-    if (currentUser) {
-      updateStudentUI();
-      navigateTo('screen-student-app');
-      switchNavTab('home');
-    } else {
-      navigateTo('screen-welcome');
-    }
-  }, 2000);
+  // Seed default attendance if empty
+  if (attendanceRecords.length === 0) {
+    attendanceRecords.push({
+      id: "ATT-TODAY-01",
+      studentId: "DL-2026-10492",
+      studentName: "Vivek Verma",
+      dateStr: new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
+      entryTime: "08:15 AM",
+      exitTime: null,
+      duration: "Running",
+      isInside: true,
+      status: "INSIDE",
+      shiftId: 1
+    });
+    setLocal("attendanceRecords", attendanceRecords);
+  }
+
+  // Open straight to Student App with full data
+  updateStudentUI();
+  navigateTo('screen-student-app');
+  switchNavTab('home');
 });

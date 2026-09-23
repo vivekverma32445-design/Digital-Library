@@ -9,7 +9,7 @@
   <!-- Google Fonts: Outfit & Plus Jakarta Sans (Exact Material 3 Android Typography) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Firebase SDK for Real Firestore Database Sync -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -22,7 +22,17 @@
 
 <div class="app-device-frame">
 
-  <!-- TOP PERSISTENT APK DOWNLOAD BAR (Sticky across whole app) -->
+  <!-- ANDROID SYSTEM STATUS BAR (Realistic Edge-to-Edge look) -->
+  <div class="phone-mockup-status-bar">
+    <span id="status-bar-clock">9:41</span>
+    <div class="status-bar-icons">
+      <span>📶 5G</span>
+      <span>🛜</span>
+      <span>🔋 100%</span>
+    </div>
+  </div>
+
+  <!-- TOP PERSISTENT APK DOWNLOAD BAR (Direct download for users & admins) -->
   <div class="app-top-download-bar">
     <div class="info-tag">
       <span>🛡️</span>
@@ -33,260 +43,35 @@
     </a>
   </div>
 
-  <!-- SCREEN 1: SPLASH SCREEN (Exact Twin to AuthScreens.kt) -->
-  <div id="screen-splash" class="screen-view active-screen" style="justify-content:space-between; align-items:center; padding:60px 24px 30px; text-align:center; background:linear-gradient(180deg, var(--soft-cream) 0%, var(--warm-cream) 60%, var(--cream-gradient) 100%);">
-    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-      <div style="width:120px; height:120px; border-radius:50%; background:rgba(27,94,32,0.12); padding:5px; margin-bottom:18px;">
-        <img src="assets/ic_digital_library_logo.jpg" style="width:100%; height:100%; border-radius:50%; border:2.5px solid var(--emerald-accent); object-fit:cover;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
-      </div>
-      <h1 style="font-family:'Outfit',sans-serif; font-size:28px; font-weight:800; color:var(--charcoal-heading); letter-spacing:0.5px;">Digital Library</h1>
-      <div style="font-size:15px; font-weight:700; color:var(--primary-green); margin-top:4px;">Maa Durga Digital Library</div>
-      <div style="font-size:12.5px; color:var(--charcoal-muted); margin-top:6px;">Your Space. Your Focus.</div>
-      <div style="width:28px; height:28px; border:2.5px solid rgba(27,94,32,0.2); border-top-color:var(--primary-green); border-radius:50%; animation:spin 0.8s linear infinite; margin-top:30px;"></div>
+  <!-- ROLE SWITCHER HEADER BAR (Instant toggle between Student & Admin Console) -->
+  <div class="role-switch-header-bar">
+    <div style="font-size:11px; font-weight:800; color:var(--primary-green); display:flex; align-items:center; gap:5px;">
+      <span>📖</span> MAA DURGA DIGITAL LIBRARY
     </div>
-    <div>
-      <div style="background:rgba(235,242,236,0.8); border:1px solid rgba(27,94,32,0.4); border-radius:20px; padding:8px 18px; display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:800;">
-        <span style="color:var(--primary-green);">&lt;/&gt;</span>
-        <span>Created by Vivek & Prince</span>
-      </div>
-      <div style="font-size:11px; color:var(--charcoal-muted); margin-top:4px;">Lead App Developers</div>
+    <div class="mode-pill-toggle">
+      <button id="pill-mode-student" class="active-pill" onclick="switchMode('student')">🎓 Student App</button>
+      <button id="pill-mode-admin" onclick="switchMode('admin')">🛡️ Admin Desk</button>
     </div>
   </div>
 
-  <!-- SCREEN 2: WELCOME SCREEN (Exact Twin to AuthScreens.kt WelcomeScreen) -->
-  <div id="screen-welcome" class="screen-view" style="padding:24px 20px 20px; overflow-y:auto; justify-content:space-between;">
-    <div style="text-align:center; padding:10px 0 20px;">
-      <div style="width:90px; height:90px; border-radius:50%; background:#FFFFFF; border:2px solid var(--subtle-gold-border); padding:4px; margin:0 auto;">
-        <img src="assets/ic_digital_library_logo.jpg" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
-      </div>
-      <div style="display:inline-block; background:var(--subtle-gold-light); border:1px solid rgba(226,212,183,0.8); color:var(--subtle-gold); font-size:10.5px; font-weight:800; letter-spacing:0.8px; padding:4px 12px; border-radius:20px; margin-top:14px;">
-        ✦ ESTD. 2024 • MODERN STUDY SANCTUARY ✦
-      </div>
-      <div style="font-size:16px; color:var(--charcoal-muted); margin-top:10px;">Welcome to</div>
-      <h2 style="font-family:'Outfit',sans-serif; font-size:24px; font-weight:800; color:var(--deep-forest-green); margin-top:2px;">Maa Durga Digital Library</h2>
-      <div style="font-size:13px; font-weight:700; color:var(--subtle-gold); margin-top:4px;">Read More • Learn More • Grow More</div>
-    </div>
+  <!-- ==================== SCREEN 1: STUDENT MAIN APP CONTAINER ==================== -->
+  <div id="screen-student-app" class="screen-view active-screen has-nav">
 
-    <div>
-      <div style="font-size:18px; font-weight:800; color:var(--charcoal-heading); margin-bottom:4px;">Choose Your Access</div>
-      <div style="font-size:12.5px; color:var(--charcoal-muted); margin-bottom:14px;">Select the portal that matches your role to continue</div>
-
-      <!-- Student Portal Card -->
-      <div class="m3-card" style="display:flex; align-items:center; gap:14px; cursor:pointer;" onclick="navigateTo('screen-login')">
-        <div style="width:50px; height:50px; border-radius:14px; background:var(--deep-forest-green); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0;">
-          📖
-        </div>
-        <div style="flex:1;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <h3 style="font-size:17px; font-weight:800; color:var(--deep-forest-green);">Student</h3>
-            <span style="font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:6px; background:#E8F5E9; color:#1B5E20;">LEARNER / MEMBER</span>
-          </div>
-          <p style="font-size:12px; color:var(--charcoal-muted); margin-top:3px;">Self-study seats, shifts & digital library access</p>
-        </div>
-        <span style="font-size:18px; font-weight:800; color:var(--primary-green);">➔</span>
-      </div>
-
-      <!-- Administrator Portal Card -->
-      <div class="m3-card" style="display:flex; align-items:center; gap:14px; cursor:pointer;" onclick="navigateTo('screen-admin-login')">
-        <div style="width:50px; height:50px; border-radius:14px; background:#B45309; color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0;">
-          🛡️
-        </div>
-        <div style="flex:1;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <h3 style="font-size:17px; font-weight:800; color:#B45309;">Administrator</h3>
-            <span style="font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:6px; background:#FEF3C7; color:#B45309;">DESK / STAFF</span>
-          </div>
-          <p style="font-size:12px; color:var(--charcoal-muted); margin-top:3px;">Manage student registrations, shifts, seats & notice board</p>
-        </div>
-        <span style="font-size:18px; font-weight:800; color:#B45309;">➔</span>
-      </div>
-    </div>
-
-    <div style="text-align:center; padding:10px 0;">
-      <div style="background:rgba(27,94,32,0.08); border:1px solid rgba(27,94,32,0.25); border-radius:20px; padding:6px 14px; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800;">
-        <span style="color:var(--primary-green);">&lt;/&gt;</span>
-        <span>Developed by Vivek & Prince</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCREEN 3: STUDENT LOGIN -->
-  <div id="screen-login" class="screen-view">
-    <div style="padding:14px 16px; display:flex; align-items:center; gap:10px;">
-      <button onclick="navigateTo('screen-welcome')" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--charcoal-heading);">←</button>
-      <span style="font-weight:700; font-size:15px; color:var(--charcoal-muted);">Student Portal</span>
-    </div>
-
-    <div class="scroll-content-pad">
-      <h2 style="font-family:'Outfit',sans-serif; font-size:26px; font-weight:800; color:var(--deep-forest-green); margin-bottom:4px;">Welcome Back! 👋</h2>
-      <p style="font-size:13px; color:var(--charcoal-muted); margin-bottom:24px;">Sign in with your registered mobile to access desk</p>
-
-      <div class="form-group-field">
-        <label class="form-label">Registered Mobile Number</label>
-        <div class="input-outline-box">
-          <span class="prefix-flag">+91</span>
-          <input type="tel" id="stu-login-mobile" placeholder="10-digit mobile number" maxlength="10" value="9876543210">
-        </div>
-      </div>
-
-      <div class="form-group-field">
-        <label class="form-label">Password</label>
-        <div class="input-outline-box">
-          <input type="password" id="stu-login-password" placeholder="Enter password" value="student123">
-          <span onclick="togglePasswordVis('stu-login-password')" style="cursor:pointer; font-size:18px;">👁️</span>
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; margin-bottom:18px;">
-        <a href="javascript:void(0)" onclick="navigateTo('screen-forgot')" style="font-size:13px; font-weight:700; color:var(--primary-green); text-decoration:none;">Forgot Password?</a>
-      </div>
-
-      <button class="btn-primary-green" onclick="submitStudentLogin()">
-        <span>Login to Library Desk</span> ➔
-      </button>
-
-      <div style="text-align:center; margin-top:24px; font-size:13.5px; color:var(--charcoal-muted);">
-        New to Maa Durga Digital Library? 
-        <a href="javascript:void(0)" onclick="navigateTo('screen-register')" style="font-weight:800; color:var(--primary-green); text-decoration:none;">Register Now</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCREEN 4: STUDENT REGISTER -->
-  <div id="screen-register" class="screen-view">
-    <div style="padding:14px 16px; display:flex; align-items:center; gap:10px;">
-      <button onclick="navigateTo('screen-login')" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--charcoal-heading);">←</button>
-      <span style="font-weight:700; font-size:15px; color:var(--charcoal-muted);">New Registration</span>
-    </div>
-
-    <div class="scroll-content-pad">
-      <h2 style="font-family:'Outfit',sans-serif; font-size:24px; font-weight:800; color:var(--deep-forest-green); margin-bottom:4px;">Join Digital Library 📝</h2>
-      <p style="font-size:13px; color:var(--charcoal-muted); margin-bottom:20px;">Create your profile for seat reservation & attendance</p>
-
-      <div class="form-group-field">
-        <label class="form-label">Full Name</label>
-        <div class="input-outline-box">
-          <input type="text" id="reg-name" placeholder="Enter student full name">
-        </div>
-      </div>
-
-      <div class="form-group-field">
-        <label class="form-label">10-Digit Mobile Number</label>
-        <div class="input-outline-box">
-          <span class="prefix-flag">+91</span>
-          <input type="tel" id="reg-mobile" placeholder="Mobile number" maxlength="10">
-        </div>
-      </div>
-
-      <div class="form-group-field">
-        <label class="form-label">Gender</label>
-        <div style="display:flex; gap:16px; padding:6px 0;">
-          <label style="font-size:13.5px; font-weight:700; display:flex; align-items:center; gap:6px;">
-            <input type="radio" name="reg-gender" value="Male" checked> Male
-          </label>
-          <label style="font-size:13.5px; font-weight:700; display:flex; align-items:center; gap:6px;">
-            <input type="radio" name="reg-gender" value="Female"> Female
-          </label>
-          <label style="font-size:13.5px; font-weight:700; display:flex; align-items:center; gap:6px;">
-            <input type="radio" name="reg-gender" value="Other"> Other
-          </label>
-        </div>
-      </div>
-
-      <div class="form-group-field">
-        <label class="form-label">Create Password</label>
-        <div class="input-outline-box">
-          <input type="password" id="reg-pwd" placeholder="At least 6 characters">
-          <span onclick="togglePasswordVis('reg-pwd')" style="cursor:pointer; font-size:18px;">👁️</span>
-        </div>
-      </div>
-
-      <div class="form-group-field">
-        <label class="form-label">Confirm Password</label>
-        <div class="input-outline-box">
-          <input type="password" id="reg-confirm-pwd" placeholder="Re-enter password">
-          <span onclick="togglePasswordVis('reg-confirm-pwd')" style="cursor:pointer; font-size:18px;">👁️</span>
-        </div>
-      </div>
-
-      <button class="btn-primary-green" onclick="submitStudentRegister()">
-        <span>Complete Registration</span> ➔
-      </button>
-
-      <div style="text-align:center; margin-top:20px; font-size:13.5px; color:var(--charcoal-muted);">
-        Already registered? 
-        <a href="javascript:void(0)" onclick="navigateTo('screen-login')" style="font-weight:800; color:var(--primary-green); text-decoration:none;">Login here</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCREEN 5: FORGOT PASSWORD -->
-  <div id="screen-forgot" class="screen-view">
-    <div style="padding:14px 16px; display:flex; align-items:center; gap:10px;">
-      <button onclick="navigateTo('screen-login')" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--charcoal-heading);">←</button>
-      <span style="font-weight:700; font-size:15px; color:var(--charcoal-muted);">Password Reset</span>
-    </div>
-
-    <div class="scroll-content-pad">
-      <h2 style="font-family:'Outfit',sans-serif; font-size:22px; font-weight:800; color:var(--deep-forest-green); margin-bottom:4px;">Reset Request 🔑</h2>
-      <p style="font-size:13px; color:var(--charcoal-muted); margin-bottom:20px;">Submit registered mobile & new password. Library Admin will verify and activate your new password.</p>
-
-      <div class="form-group-field">
-        <label class="form-label">Registered Mobile Number</label>
-        <div class="input-outline-box">
-          <span class="prefix-flag">+91</span>
-          <input type="tel" id="forgot-mobile" placeholder="10-digit mobile" maxlength="10">
-        </div>
-      </div>
-
-      <div class="form-group-field">
-        <label class="form-label">New Password</label>
-        <div class="input-outline-box">
-          <input type="password" id="forgot-pwd" placeholder="Enter new password">
-        </div>
-      </div>
-
-      <button class="btn-primary-green" onclick="submitForgotRequest()">
-        <span>Submit Request to Admin</span> ➔
-      </button>
-    </div>
-  </div>
-
-  <!-- SCREEN 6: ADMIN LOGIN -->
-  <div id="screen-admin-login" class="screen-view">
-    <div style="padding:14px 16px; display:flex; align-items:center; gap:10px;">
-      <button onclick="navigateTo('screen-welcome')" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--charcoal-heading);">←</button>
-      <span style="font-weight:700; font-size:15px; color:#B45309;">Administrator Desk</span>
-    </div>
-
-    <div class="scroll-content-pad">
-      <h2 style="font-family:'Outfit',sans-serif; font-size:24px; font-weight:800; color:#B45309; margin-bottom:4px;">Authorized Personnel Only 🛡️</h2>
-      <p style="font-size:13px; color:var(--charcoal-muted); margin-bottom:20px;">Desk Operations for Vivek & Prince</p>
-
-      <div class="form-group-field">
-        <label class="form-label">Admin Security Key</label>
-        <div class="input-outline-box">
-          <input type="password" id="admin-sec-key" placeholder="Enter Master Key" value="MDDL@ADMIN2026">
-        </div>
-        <div style="font-size:11.5px; color:var(--charcoal-muted); margin-top:6px;">Master Keys: MDDL@ADMIN2026 or ADMIN9569</div>
-      </div>
-
-      <button class="btn-primary-green" style="background:#B45309;" onclick="submitAdminLogin()">
-        <span>Unlock Administrator Desk</span> ➔
-      </button>
-    </div>
-  </div>
-
-  <!-- SCREEN 7: STUDENT MAIN APP CONTAINER WITH 5 M3 TABS -->
-  <div id="screen-student-app" class="screen-view has-nav">
-
-    <!-- Top Action Bar -->
+    <!-- Top Action Bar (Exact match to StudentHomeScreen.kt lines 153-222) -->
     <div class="app-top-nav-bar">
       <div class="user-info-box">
-        <div class="avatar-circle">🎓</div>
+        <div class="avatar-circle">
+          <!-- Vector App Logo -->
+          <svg viewBox="0 0 100 100" style="width:100%; height:100%;">
+            <circle cx="50" cy="50" r="48" fill="#0A2E12"/>
+            <circle cx="50" cy="50" r="44" fill="none" stroke="#D4AF37" stroke-width="2"/>
+            <path d="M25 65 Q50 55 50 40 Q50 55 75 65 L75 42 Q50 32 50 40 Q50 32 25 42 Z" fill="#00C853"/>
+            <polygon points="50,22 55,34 50,31 45,34" fill="#FFD54F"/>
+          </svg>
+        </div>
         <div>
-          <div style="font-size:11px; color:var(--charcoal-muted); font-weight:700;">Welcome,</div>
-          <div style="font-size:15px; font-weight:800;" id="student-name-header">Student Member 👋</div>
+          <div style="font-size:18px; font-weight:800;" id="student-name-header">Good Evening, Vivek Verma 👋</div>
+          <div style="font-size:12.5px; color:var(--charcoal-muted);">Ready to study today?</div>
         </div>
       </div>
       <div class="action-icons">
@@ -295,80 +80,93 @@
           <span class="badge-pill" id="bell-unread-badge">2</span>
         </button>
         <button class="icon-action-btn" onclick="toggleAppTheme()" title="Toggle Theme">🌓</button>
-        <button class="icon-action-btn" onclick="openModal('modal-logout-confirm')" title="Logout">🚪</button>
+        <button class="icon-action-btn" onclick="navigateTo('screen-welcome')" title="Switch User">🚪</button>
       </div>
     </div>
 
-    <!-- TAB 1: HOME TAB (Pixel-perfect to StudentHomeScreen.kt) -->
+    <!-- TAB 1: HOME TAB (Pixel-perfect replica of StudentHomeScreen.kt) -->
     <div id="tab-home" class="scroll-content-pad">
-      <!-- Active Membership Card -->
+      
+      <!-- Active Membership Gradient Card (Lines 475-602) -->
       <div class="membership-gradient-card" id="home-membership-card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:11.5px; font-weight:800; letter-spacing:0.8px; opacity:0.9;">STUDENT MEMBERSHIP</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:15px; opacity:0.9;">🪪</span>
+            <span style="font-size:12px; font-weight:700; opacity:0.9; letter-spacing:0.5px;">Membership</span>
+          </div>
           <span class="membership-status-pill" id="home-status-pill">ACTIVE</span>
         </div>
-        <div style="font-family:'Outfit',sans-serif; font-size:26px; font-weight:800; margin:10px 0 2px;" id="home-seat-badge">Seat #02</div>
-        <div style="font-size:13px; opacity:0.9;" id="home-shift-badge">Shift 1 (6:00 AM - 12:00 PM)</div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:12px; border-top:1px solid rgba(255,255,255,0.2); padding-top:8px;">
-          <span id="home-validity-badge" style="color:#FFE082;">Valid till: 30 Oct 2026</span>
-          <span id="home-days-left-badge" style="font-weight:800; color:#FFFFFF;">23 Days Remaining</span>
+
+        <div style="font-family:'Outfit',sans-serif; font-size:22px; font-weight:800; margin:14px 0 2px;" id="home-seat-badge">
+          Seat 02 | Shift 1 (6:00 AM - 12:00 PM)
+        </div>
+        <div style="font-size:12px; opacity:0.85;" id="home-shift-badge">2 Month Membership Validity</div>
+
+        <!-- Daily Countdown Badge (Lines 571-594) -->
+        <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); border-radius:10px; padding:6px 12px; margin:12px 0 8px;">
+          <span style="font-size:14px;">⏱️</span>
+          <span id="home-days-left-badge" style="font-size:12px; font-weight:800; color:#FFFFFF;">⏳ 23 Days Remaining Until Expiry</span>
+        </div>
+
+        <div style="font-size:10.5px; opacity:0.85; border-top:1px solid rgba(255,255,255,0.2); padding-top:8px; margin-top:4px;" id="home-validity-badge">
+          Expires on 30 Oct 2026 • Auto-expires on 30 Oct 2026
         </div>
       </div>
 
-      <!-- No Membership State Card (if user has no seat) -->
-      <div class="m3-card" id="home-no-membership-card" style="display:none; text-align:center; padding:24px;">
-        <div style="font-size:36px;">🪑</div>
-        <div style="font-size:17px; font-weight:800; margin:8px 0 4px;">No Active Seat Booked</div>
-        <div style="font-size:12.5px; color:var(--charcoal-muted); margin-bottom:14px;">Select your preferred study cabin from 36 AC seats to start learning.</div>
-        <button class="btn-primary-green" onclick="switchNavTab('seats')">Choose Your Seat ➔</button>
-      </div>
-
-      <!-- Today's Attendance Metric Card (Live Punch in/out) -->
+      <!-- Today's Attendance Card (Lines 679-760) -->
       <div class="m3-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <div>
-            <span style="font-weight:800; font-size:15px;">Today's Attendance</span>
-            <div style="font-size:11.5px; color:var(--charcoal-muted);" id="live-ist-date">Today</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-weight:800; font-size:15px;">Today's Attendance</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div style="background:#FFF3E0; color:#E65100; font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:3px;">
+              <span>🔥</span> <span>5 Days</span>
+            </div>
+            <div style="background:#E8F8EE; color:#1B5E20; font-size:10px; font-weight:800; padding:3px 8px; border-radius:20px;" id="today-punch-status">
+              INSIDE NOW
+            </div>
           </div>
-          <span style="font-size:11px; font-weight:800;" id="today-punch-status">NOT CHECKED IN ⚪</span>
         </div>
 
-        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; background:var(--surface-variant); padding:10px; border-radius:12px; text-align:center; margin-bottom:12px;">
-          <div>
-            <div style="font-size:10px; color:var(--charcoal-muted); font-weight:700;">ENTRY</div>
-            <div style="font-size:13px; font-weight:800;" id="att-metric-entry">--:--</div>
+        <div class="att-metrics-grid">
+          <div class="att-metric-box">
+            <div class="label">ENTRY</div>
+            <div class="val" id="att-metric-entry">08:15 AM</div>
           </div>
-          <div>
-            <div style="font-size:10px; color:var(--charcoal-muted); font-weight:700;">EXIT</div>
-            <div style="font-size:13px; font-weight:800;" id="att-metric-exit">--:--</div>
+          <div class="att-metric-box">
+            <div class="label">EXIT</div>
+            <div class="val" id="att-metric-exit">--</div>
           </div>
-          <div>
-            <div style="font-size:10px; color:var(--charcoal-muted); font-weight:700;">DURATION</div>
-            <div style="font-size:13px; font-weight:800; color:var(--primary-green);" id="att-metric-duration">0m</div>
+          <div class="att-metric-box">
+            <div class="label">DURATION</div>
+            <div class="val" style="color:var(--primary-green);" id="att-metric-duration">Running</div>
           </div>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <button class="btn-primary-green" style="height:42px; margin:0; font-size:13.5px;" onclick="punchAttendance('IN')">⏱️ PUNCH IN</button>
-          <button class="btn-primary-green" style="height:42px; margin:0; font-size:13.5px; background:var(--danger-red);" onclick="punchAttendance('OUT')">🚪 PUNCH OUT</button>
+          <button class="btn-primary-green" style="height:42px; font-size:13.5px;" onclick="punchAttendance('IN')">
+            ⏱️ Mark Punch In
+          </button>
+          <button class="btn-primary-green btn-danger" style="height:42px; font-size:13.5px;" onclick="punchAttendance('OUT')">
+            🚪 Mark Punch Out
+          </button>
         </div>
       </div>
 
-      <!-- Study Streak & Motivation Card -->
+      <!-- Study Streak & Facility Highlights -->
       <div class="m3-card" style="display:flex; align-items:center; gap:14px; background:linear-gradient(135deg, rgba(27,94,32,0.06) 0%, rgba(212,175,55,0.08) 100%);">
-        <div style="font-size:32px;">🔥</div>
+        <div style="font-size:30px;">🌟</div>
         <div>
-          <div style="font-weight:800; font-size:15px; color:var(--deep-forest-green);">5 Days Study Streak!</div>
+          <div style="font-weight:800; font-size:14px; color:var(--deep-forest-green);">Daily Motivation</div>
           <div style="font-size:12px; color:var(--charcoal-muted); margin-top:2px;">"Consistency is what transforms average into excellence."</div>
         </div>
       </div>
 
-      <!-- Library Services 2x3 Grid -->
+      <!-- Library Services 2x3 Grid (Lines 800-920) -->
       <div style="font-size:16px; font-weight:800; margin:16px 0 10px;">Library Services</div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
         <div class="m3-card" style="margin:0; padding:14px; cursor:pointer;" onclick="switchNavTab('seats')">
           <div style="font-size:24px;">🪑</div>
-          <div style="font-weight:800; font-size:14px; margin-top:4px;">36 Seats Map</div>
+          <div style="font-weight:800; font-size:14px; margin-top:4px;">36 AC Seats</div>
           <div style="font-size:11px; color:var(--charcoal-muted);">Pick study cubicle</div>
         </div>
         <div class="m3-card" style="margin:0; padding:14px; cursor:pointer;" onclick="switchNavTab('attendance')">
@@ -456,10 +254,11 @@
       <!-- Live IST Clock Card -->
       <div class="m3-card" style="text-align:center; padding:20px;">
         <div style="font-size:11px; color:var(--charcoal-muted); font-weight:700;">INDIAN STANDARD TIME (IST)</div>
-        <div style="font-size:32px; font-weight:800; font-family:monospace; color:var(--primary-green); margin:6px 0;" id="live-ist-clock">--:--:--</div>
-        <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+        <div style="font-size:32px; font-weight:800; font-family:monospace; color:var(--primary-green); margin:6px 0;" id="live-ist-clock">08:15:00 AM</div>
+        <div style="font-size:12.5px; color:var(--charcoal-muted); margin-bottom:12px;" id="live-ist-date">Today</div>
+        <div style="display:flex; gap:10px; justify-content:center;">
           <button class="btn-primary-green" style="width:auto; padding:0 20px; height:38px; margin:0;" onclick="punchAttendance('IN')">⏱️ Punch In</button>
-          <button class="btn-primary-green" style="width:auto; padding:0 20px; height:38px; margin:0; background:var(--danger-red);" onclick="punchAttendance('OUT')">🚪 Punch Out</button>
+          <button class="btn-primary-green btn-danger" style="width:auto; padding:0 20px; height:38px; margin:0;" onclick="punchAttendance('OUT')">🚪 Punch Out</button>
         </div>
       </div>
 
@@ -497,7 +296,13 @@
       <!-- Digital Student ID Card (Official format) -->
       <div class="id-card-chassis">
         <div class="id-card-top">
-          <img src="assets/ic_digital_library_logo.jpg" style="width:42px; height:42px; border-radius:50%; border:2px solid var(--subtle-gold);" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
+          <div style="width:42px; height:42px; border-radius:50%; border:2px solid var(--subtle-gold); background:#FFFFFF; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <svg viewBox="0 0 100 100" style="width:100%; height:100%;">
+              <circle cx="50" cy="50" r="48" fill="#0A2E12"/>
+              <polygon points="50,22 55,34 50,31 45,34" fill="#FFD54F"/>
+              <path d="M25 65 Q50 55 50 40 Q50 55 75 65 L75 42 Q50 32 50 40 Q50 32 25 42 Z" fill="#00C853"/>
+            </svg>
+          </div>
           <div>
             <div style="font-size:14px; font-weight:800; color:#FFFFFF;">MAA DURGA DIGITAL LIBRARY</div>
             <div style="font-size:10px; color:#FFE082;">Managed by Vivek & Prince • ISO Certified Study Hub</div>
@@ -509,7 +314,7 @@
             🎓
           </div>
           <div style="font-size:13px; line-height:1.6;">
-            <div><strong>Name:</strong> <span id="id-disp-name">Student Member</span></div>
+            <div><strong>Name:</strong> <span id="id-disp-name">Vivek Verma</span></div>
             <div><strong>Roll ID:</strong> <span id="id-disp-roll">DL-2026-10492</span></div>
             <div><strong>Seat:</strong> <span id="id-disp-seat">Seat #02 (Shift 1)</span></div>
             <div><strong>Validity:</strong> <span id="id-disp-val">30 Oct 2026</span></div>
@@ -601,7 +406,7 @@
     </div>
   </div>
 
-  <!-- SCREEN 8: ADMIN DESK DASHBOARD (Exact match to AdminDashboardScreen.kt) -->
+  <!-- ==================== SCREEN 2: ADMIN DESK DASHBOARD ==================== -->
   <div id="screen-admin-dash" class="screen-view">
     <div style="background:#0F3818; color:#FFFFFF; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
       <div style="display:flex; align-items:center; gap:8px;">
@@ -612,8 +417,7 @@
         </div>
       </div>
       <div style="display:flex; gap:6px;">
-        <button onclick="navigateTo('screen-student-app')" style="background:rgba(255,255,255,0.15); border:none; color:white; font-weight:700; font-size:11.5px; padding:5px 10px; border-radius:6px; cursor:pointer;">Student App</button>
-        <button onclick="logoutUser()" style="background:#DC2626; border:none; color:white; font-weight:700; font-size:11.5px; padding:5px 10px; border-radius:6px; cursor:pointer;">Exit</button>
+        <button onclick="switchMode('student')" style="background:rgba(255,255,255,0.15); border:none; color:white; font-weight:700; font-size:11.5px; padding:5px 10px; border-radius:6px; cursor:pointer;">Student App ➔</button>
       </div>
     </div>
 
@@ -634,6 +438,66 @@
     </div>
   </div>
 
+  <!-- ==================== SCREEN 3: WELCOME SCREEN ==================== -->
+  <div id="screen-welcome" class="screen-view" style="padding:24px 20px 20px; overflow-y:auto; justify-content:space-between;">
+    <div style="text-align:center; padding:10px 0 20px;">
+      <div style="width:90px; height:90px; border-radius:50%; background:#FFFFFF; border:2px solid var(--subtle-gold-border); padding:4px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+        <svg viewBox="0 0 100 100" style="width:100%; height:100%;">
+          <circle cx="50" cy="50" r="48" fill="#0A2E12"/>
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#D4AF37" stroke-width="2"/>
+          <path d="M25 65 Q50 55 50 40 Q50 55 75 65 L75 42 Q50 32 50 40 Q50 32 25 42 Z" fill="#00C853"/>
+          <polygon points="50,22 55,34 50,31 45,34" fill="#FFD54F"/>
+        </svg>
+      </div>
+      <div style="display:inline-block; background:var(--subtle-gold-light); border:1px solid rgba(226,212,183,0.8); color:var(--subtle-gold); font-size:10.5px; font-weight:800; letter-spacing:0.8px; padding:4px 12px; border-radius:20px; margin-top:14px;">
+        ✦ ESTD. 2024 • MODERN STUDY SANCTUARY ✦
+      </div>
+      <div style="font-size:16px; color:var(--charcoal-muted); margin-top:10px;">Welcome to</div>
+      <h2 style="font-family:'Outfit',sans-serif; font-size:24px; font-weight:800; color:var(--deep-forest-green); margin-top:2px;">Maa Durga Digital Library</h2>
+      <div style="font-size:13px; font-weight:700; color:var(--subtle-gold); margin-top:4px;">Read More • Learn More • Grow More</div>
+    </div>
+
+    <div>
+      <div style="font-size:18px; font-weight:800; color:var(--charcoal-heading); margin-bottom:4px;">Choose Your Access</div>
+      <div style="font-size:12.5px; color:var(--charcoal-muted); margin-bottom:14px;">Select the portal that matches your role to continue</div>
+
+      <div class="m3-card" style="display:flex; align-items:center; gap:14px; cursor:pointer;" onclick="switchMode('student')">
+        <div style="width:50px; height:50px; border-radius:14px; background:var(--deep-forest-green); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0;">
+          📖
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3 style="font-size:17px; font-weight:800; color:var(--deep-forest-green);">Student</h3>
+            <span style="font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:6px; background:#E8F5E9; color:#1B5E20;">LEARNER / MEMBER</span>
+          </div>
+          <p style="font-size:12px; color:var(--charcoal-muted); margin-top:3px;">Self-study seats, shifts & digital library access</p>
+        </div>
+        <span style="font-size:18px; font-weight:800; color:var(--primary-green);">➔</span>
+      </div>
+
+      <div class="m3-card" style="display:flex; align-items:center; gap:14px; cursor:pointer;" onclick="switchMode('admin')">
+        <div style="width:50px; height:50px; border-radius:14px; background:#B45309; color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0;">
+          🛡️
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3 style="font-size:17px; font-weight:800; color:#B45309;">Administrator</h3>
+            <span style="font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:6px; background:#FEF3C7; color:#B45309;">DESK / STAFF</span>
+          </div>
+          <p style="font-size:12px; color:var(--charcoal-muted); margin-top:3px;">Manage student registrations, shifts, seats & notice board</p>
+        </div>
+        <span style="font-size:18px; font-weight:800; color:#B45309;">➔</span>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding:10px 0;">
+      <div style="background:rgba(27,94,32,0.08); border:1px solid rgba(27,94,32,0.25); border-radius:20px; padding:6px 14px; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800;">
+        <span style="color:var(--primary-green);">&lt;/&gt;</span>
+        <span>Developed by Vivek & Prince</span>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== ALL INTERACTIVE MODALS ==================== -->
 
   <!-- MODAL: MEMBERSHIP DURATION & SHIFTS PICKER -->
@@ -649,7 +513,7 @@
         <strong id="modal-memb-seat-badge" style="color:var(--primary-green); font-size:16px;">Seat #02</strong>
       </div>
 
-      <div style="font-size:13px; font-weight:800; margin-bottom:8px;">Choose Study Shifts (Single or Combo):</div>
+      <div style="font-size:13px; font-weight:800; margin-bottom:8px;">Choose Study Shifts:</div>
       <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px;">
         <label style="display:flex; justify-content:space-between; align-items:center; background:var(--surface-card); border:1px solid var(--border-color); padding:10px; border-radius:10px; font-size:13px; cursor:pointer;">
           <span>Shift 1 (6:00 AM - 12:00 PM)</span>
@@ -745,8 +609,7 @@
     <div class="modal-content-panel" style="padding:16px;">
       <div style="border:2px solid var(--subtle-gold-border); border-radius:14px; padding:16px; background:#FFFFFF; color:#0A2E12;">
         <div style="text-align:center; border-bottom:1px solid #E2E8F0; padding-bottom:10px; margin-bottom:12px;">
-          <img src="assets/ic_digital_library_logo.jpg" style="width:40px; height:40px; border-radius:50%;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
-          <div style="font-size:15px; font-weight:800; margin-top:4px;">MAA DURGA DIGITAL LIBRARY</div>
+          <div style="font-size:15px; font-weight:800;">MAA DURGA DIGITAL LIBRARY</div>
           <div style="font-size:10px; color:#64748B;">Mania Deval Road, Ghazipur District, UP - 232333</div>
           <div style="display:inline-block; background:#E8F5E9; color:#1B5E20; font-size:10px; font-weight:800; padding:2px 8px; border-radius:4px; margin-top:4px;">OFFICIAL PAYMENT RECEIPT</div>
         </div>
@@ -754,7 +617,7 @@
         <div style="font-size:12px; line-height:1.7;">
           <div style="display:flex; justify-content:space-between;"><span>Receipt No:</span> <strong id="rec-number">REC-2026-9812</strong></div>
           <div style="display:flex; justify-content:space-between;"><span>Date:</span> <strong id="rec-date">Today</strong></div>
-          <div style="display:flex; justify-content:space-between;"><span>Student:</span> <strong id="rec-name">Student Member</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Student:</span> <strong id="rec-name">Vivek Verma</strong></div>
           <div style="display:flex; justify-content:space-between;"><span>Details:</span> <strong id="rec-shift-desc">Seat #02</strong></div>
           <div style="display:flex; justify-content:space-between;"><span>UTR Ref:</span> <strong id="rec-utr">423987123984</strong></div>
           <div style="display:flex; justify-content:space-between; font-size:15px; border-top:1px dashed #CBD5E1; padding-top:6px; margin-top:6px;">
@@ -780,9 +643,9 @@
     <div class="modal-content-panel">
       <h3 style="font-size:17px; font-weight:800; margin-bottom:12px;">Personal Information</h3>
       <div style="font-size:13px; line-height:2;">
-        <div style="display:flex; justify-content:space-between;"><span>Full Name:</span> <strong id="pinfo-name">Student Member</strong></div>
+        <div style="display:flex; justify-content:space-between;"><span>Full Name:</span> <strong id="pinfo-name">Vivek Verma</strong></div>
         <div style="display:flex; justify-content:space-between;"><span>Mobile:</span> <strong id="pinfo-mobile">+91 9876543210</strong></div>
-        <div style="display:flex; justify-content:space-between;"><span>Email:</span> <strong id="pinfo-email">Not provided</strong></div>
+        <div style="display:flex; justify-content:space-between;"><span>Email:</span> <strong id="pinfo-email">vivek.study@gmail.com</strong></div>
         <div style="display:flex; justify-content:space-between;"><span>Gender:</span> <strong id="pinfo-gender">Male</strong></div>
         <div style="display:flex; justify-content:space-between;"><span>Role:</span> <strong>Library Student Member</strong></div>
       </div>
@@ -921,7 +784,7 @@
       <p style="font-size:13px; color:var(--charcoal-muted); margin-bottom:16px;">Are you sure you want to sign out from the library desk?</p>
       <div style="display:flex; gap:10px;">
         <button class="btn-primary-green btn-outline" style="flex:1;" onclick="closeModal('modal-logout-confirm')">Cancel</button>
-        <button class="btn-primary-green" style="flex:1; background:var(--danger-red);" onclick="closeModal('modal-logout-confirm'); logoutUser();">Logout</button>
+        <button class="btn-primary-green btn-danger" style="flex:1;" onclick="closeModal('modal-logout-confirm'); navigateTo('screen-welcome');">Logout</button>
       </div>
     </div>
   </div>
