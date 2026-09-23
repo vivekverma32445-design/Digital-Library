@@ -1,0 +1,563 @@
+/* ==========================================================================
+   MAA DURGA DIGITAL LIBRARY - JETPACK COMPOSE THEME & STYLING
+   Pixel-perfect replica of the Android Material 3 Design System
+   ========================================================================== */
+
+:root {
+  /* Exact Android Theme Colors (com.example.ui.theme.Color.kt) */
+  --soft-cream: #FBF8F2;
+  --warm-cream: #F5EFE4;
+  --cream-gradient: #F0EBE0;
+  --deep-forest-green: #0F3818;
+  --primary-green: #1B5E20;
+  --primary-green-dark: #0A2E12;
+  --emerald-accent: #2E7D32;
+  --subtle-gold: #C49A45;
+  --subtle-gold-light: #FAF5EC;
+  --subtle-gold-border: #E2D4B7;
+  --charcoal-heading: #1E293B;
+  --charcoal-muted: #64748B;
+  --surface-card: #FFFFFF;
+  --surface-variant: #EBF2EC;
+  --border-color: #D6E2D8;
+  --border-subtle: #E2E8F0;
+  --seat-available-bg: #E8F5E9;
+  --seat-available-border: #A5D6A7;
+  --seat-occupied-bg: #FFE4E6;
+  --seat-occupied-border: #FDA4AF;
+  --seat-selected-bg: #FFD700;
+  --seat-selected-border: #B8860B;
+  --seat-maintenance-bg: #F1F5F9;
+  --seat-maintenance-border: #CBD5E1;
+  --danger-red: #DC2626;
+  --danger-light: #FEF2F2;
+  --warning-amber: #D97706;
+  --warning-light: #FFFBEB;
+  --bg-page: #0B130E;
+  --container-bg: #FBF8F2;
+}
+
+/* Dark Theme Overrides */
+body.dark-mode {
+  --soft-cream: #121A15;
+  --warm-cream: #18221C;
+  --cream-gradient: #1E2B23;
+  --deep-forest-green: #2E7D32;
+  --primary-green: #4CAF50;
+  --primary-green-dark: #1B5E20;
+  --emerald-accent: #66BB6A;
+  --subtle-gold: #E5C07B;
+  --subtle-gold-light: #24221A;
+  --subtle-gold-border: #4A3E2A;
+  --charcoal-heading: #F1F5F9;
+  --charcoal-muted: #94A3B8;
+  --surface-card: #1A241E;
+  --surface-variant: #233128;
+  --border-color: #2D3D33;
+  --border-subtle: #2D3D33;
+  --seat-available-bg: #14301B;
+  --seat-available-border: #225C31;
+  --seat-occupied-bg: #381A1D;
+  --seat-occupied-border: #6B232B;
+  --seat-selected-bg: #B8860B;
+  --seat-selected-border: #FFD700;
+  --seat-maintenance-bg: #1E293B;
+  --seat-maintenance-border: #334155;
+  --bg-page: #050A07;
+  --container-bg: #121A15;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg-page);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--charcoal-heading);
+  overflow-x: hidden;
+  transition: background-color 0.3s;
+}
+
+/* Device Shell: 100% full-screen responsive on mobile, centered mobile container on desktop */
+.app-device-frame {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  background: var(--container-bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 0 50px rgba(0,0,0,0.7);
+  overflow: hidden;
+}
+
+/* Sticky APK Download Top Bar */
+.app-top-download-bar {
+  background: linear-gradient(135deg, #0F3818 0%, #1B5E20 100%);
+  color: #FFFFFF;
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 2px solid var(--subtle-gold);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.app-top-download-bar .info-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFE082;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.app-top-download-bar .btn-download {
+  background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
+  color: #0A2E12;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 11.5px;
+  padding: 5px 13px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 3px 8px rgba(212,175,55,0.4);
+  white-space: nowrap;
+  transition: transform 0.15s;
+}
+.app-top-download-bar .btn-download:active {
+  transform: scale(0.95);
+}
+
+/* Screen Management */
+.screen-view {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  min-height: calc(100vh - 44px);
+  background: var(--container-bg);
+  position: relative;
+}
+.screen-view.active-screen {
+  display: flex;
+}
+.screen-view.has-nav {
+  padding-bottom: 74px; /* Clearance for bottom navigation bar */
+}
+
+/* Top Action Header */
+.app-top-nav-bar {
+  background: var(--surface-card);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 44px;
+  z-index: 100;
+}
+.app-top-nav-bar .user-info-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.app-top-nav-bar .avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--primary-green);
+  background: var(--surface-variant);
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.app-top-nav-bar .action-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.icon-action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  color: var(--charcoal-heading);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  position: relative;
+  transition: all 0.2s;
+}
+.icon-action-btn:hover {
+  background: var(--surface-variant);
+}
+.icon-action-btn .badge-pill {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #DC2626;
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 800;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--surface-card);
+}
+
+/* Android Material 3 Bottom Navigation Bar */
+.m3-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface-card);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-around;
+  padding: 6px 0 10px;
+  z-index: 500;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+}
+.m3-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--charcoal-muted);
+  cursor: pointer;
+  gap: 3px;
+  flex: 1;
+  transition: color 0.2s;
+}
+.m3-nav-item .icon-box {
+  padding: 3px 14px;
+  border-radius: 16px;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+.m3-nav-item.active {
+  color: var(--primary-green);
+}
+.m3-nav-item.active .icon-box {
+  background: var(--surface-variant);
+  transform: translateY(-2px);
+}
+
+/* Content Container & Scrollable Panels */
+.scroll-content-pad {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Material Cards */
+.m3-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+/* Active Membership Gradient Card (Exact Android style) */
+.membership-gradient-card {
+  background: linear-gradient(135deg, #0F471A 0%, #1B5E20 60%, #2E7D32 100%);
+  color: #FFFFFF;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(15, 71, 26, 0.25);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.membership-status-pill {
+  background: #00C853;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+.membership-status-pill.expired {
+  background: #FF5252;
+  color: #FFFFFF;
+}
+.membership-status-pill.pending {
+  background: #FFD700;
+  color: #000000;
+}
+
+/* Form Styles & Inputs */
+.form-group-field {
+  margin-bottom: 14px;
+}
+.form-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--charcoal-heading);
+  margin-bottom: 6px;
+}
+.input-outline-box {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--surface-card);
+  padding: 0 14px;
+  height: 48px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-outline-box:focus-within {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.12);
+}
+.input-outline-box input,
+.input-outline-box select,
+.input-outline-box textarea {
+  border: none;
+  outline: none;
+  width: 100%;
+  height: 100%;
+  font-size: 14.5px;
+  color: var(--charcoal-heading);
+  background: transparent;
+}
+.prefix-flag {
+  font-weight: 800;
+  color: var(--primary-green);
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+/* Buttons */
+.btn-primary-green {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--emerald-accent) 100%);
+  color: #FFFFFF;
+  border: none;
+  width: 100%;
+  height: 48px;
+  border-radius: 14px;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(27, 94, 32, 0.25);
+  transition: all 0.2s;
+}
+.btn-primary-green:active {
+  transform: scale(0.98);
+}
+.btn-danger-red {
+  background: var(--danger-red);
+  color: #FFFFFF;
+}
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--border-color);
+  color: var(--charcoal-heading);
+  box-shadow: none;
+}
+.btn-outline:hover {
+  background: var(--surface-variant);
+}
+
+/* Chip Filters */
+.chips-scroll-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+.filter-chip {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-card);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--charcoal-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+.filter-chip.active {
+  background: var(--surface-variant);
+  border-color: var(--primary-green);
+  color: var(--primary-green);
+}
+
+/* 36 Seats Floor Plan */
+.seat-cubicles-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+.seat-cube-cell {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.seat-cube-cell .seat-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-top: 2px;
+}
+.seat-cube-cell.available {
+  background: var(--seat-available-bg);
+  color: var(--primary-green);
+  border: 1.5px solid var(--seat-available-border);
+}
+.seat-cube-cell.available .seat-dot {
+  background: var(--primary-green);
+}
+.seat-cube-cell.occupied {
+  background: var(--seat-occupied-bg);
+  color: #BE123C;
+  border: 1.5px solid var(--seat-occupied-border);
+  cursor: not-allowed;
+}
+.seat-cube-cell.occupied .seat-dot {
+  background: #BE123C;
+}
+.seat-cube-cell.selected {
+  background: var(--seat-selected-bg);
+  color: #0A2E12;
+  border: 2px solid var(--seat-selected-border);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(212,175,55,0.45);
+}
+.seat-cube-cell.selected .seat-dot {
+  background: #0A2E12;
+}
+
+/* Digital Student ID Card Chassis */
+.id-card-chassis {
+  background: linear-gradient(135deg, #071F0C 0%, #104318 60%, #1B5E20 100%);
+  color: #FFFFFF;
+  border-radius: 20px;
+  padding: 22px;
+  border: 2px solid var(--subtle-gold);
+  box-shadow: 0 10px 28px rgba(10, 46, 18, 0.35);
+  position: relative;
+  margin-bottom: 20px;
+}
+.id-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(212,175,55,0.4);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+.id-barcode-footer {
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255,255,255,0.3);
+  text-align: center;
+  font-family: monospace;
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: #FFD700;
+}
+
+/* Modals & Dialogs */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+}
+.modal-backdrop.open {
+  display: flex;
+}
+.modal-content-panel {
+  background: var(--surface-card);
+  width: 100%;
+  max-width: 440px;
+  border-radius: 22px;
+  padding: 22px;
+  max-height: 88vh;
+  overflow-y: auto;
+  animation: modalPop 0.22s ease;
+  border: 1px solid var(--border-color);
+}
+@keyframes modalPop {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Toast Notification */
+#app-toast {
+  position: fixed;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1E293B;
+  color: #FFFFFF;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  z-index: 3000;
+  display: none;
+  opacity: 0;
+  transition: all 0.25s ease;
+  pointer-events: none;
+  max-width: 90%;
+  text-align: center;
+}
+#app-toast.show {
+  display: block;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
