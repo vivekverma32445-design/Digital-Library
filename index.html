@@ -110,17 +110,17 @@
 
     /* Screens & Viewport */
     .screen {
-      display: none;
+      display: none !important;
       flex-direction: column;
       flex: 1;
       overflow-y: auto;
       padding-bottom: 85px; /* for bottom nav */
     }
     .screen.active {
-      display: flex;
+      display: flex !important;
     }
     .screen.no-nav {
-      padding-bottom: 0;
+      padding-bottom: 0 !important;
     }
 
     /* Splash Screen */
@@ -208,7 +208,6 @@
     #screen-welcome {
       background: #FFFFFF;
       padding: 40px 24px 24px;
-      display: none;
       flex-direction: column;
       justify-content: space-between;
       min-height: 100vh;
