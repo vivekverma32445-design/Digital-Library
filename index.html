@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Maa Durga Digital Library - Official Portal</title>
-  <meta name="description" content="Official Portal of Maa Durga Digital Library - 36 Reserved AC Seats, 4 Flexible Shifts, Real-time Attendance & Student ID Card. Created by Vivek & Prince.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maa Durga Digital Library - Official Live Portal & App</title>
+  <meta name="description" content="Official Portal of Maa Durga Digital Library - 36 AC Seats, 4 Flexible Shifts, Live Attendance & ID Cards. Managed by Vivek & Prince.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,15 +17,11 @@
       --gold: #D4AF37;
       --gold-dark: #B8860B;
       --gold-light: #FFF9E6;
-      --accent: #E65100;
       --bg: #F4F6F9;
       --surface: #FFFFFF;
       --text: #0F172A;
       --text-muted: #64748B;
       --border: #E2E8F0;
-      --error: #DC2626;
-      --success: #16A34A;
-      --occupied: #E11D48;
       --radius-sm: 8px;
       --radius-md: 14px;
       --radius-lg: 20px;
@@ -39,36 +35,23 @@
       margin: 0;
       padding: 0;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background: #0B130E;
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* Mobile Container Frame */
-    .app-shell {
-      width: 100%;
-      max-width: 480px;
       background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
-      position: relative;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 0 50px rgba(0,0,0,0.5);
     }
 
-    /* Top Download APK Banner */
-    .top-apk-banner {
-      background: linear-gradient(135deg, #0A2E12 0%, #1B5E20 100%);
-      color: #fff;
-      padding: 10px 16px;
+    /* TOP NOTIFICATION / PROMO BAR */
+    .top-strip {
+      background: linear-gradient(90deg, #0A2E12, #1B5E20, #0A2E12);
+      color: #FFFFFF;
+      padding: 10px 20px;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
@@ -76,1594 +59,833 @@
       position: sticky;
       top: 0;
       z-index: 1000;
+    }
+    .top-strip-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-size: 13px;
     }
-    .top-apk-banner .badge {
+    .badge-apk {
       background: rgba(212,175,55,0.2);
       border: 1px solid var(--gold);
-      color: var(--gold);
+      color: #FFE082;
       font-weight: 700;
-      font-size: 10px;
-      padding: 2px 6px;
+      font-size: 11px;
+      padding: 3px 8px;
       border-radius: 4px;
-      text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    .top-apk-banner .btn-dl-apk {
+    .btn-download-hero {
       background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
       color: #0A2E12;
       text-decoration: none;
       font-weight: 800;
-      font-size: 12px;
-      padding: 7px 14px;
-      border-radius: 20px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      box-shadow: 0 3px 10px rgba(212,175,55,0.4);
-      transition: transform 0.2s;
-      white-space: nowrap;
-    }
-    .top-apk-banner .btn-dl-apk:active {
-      transform: scale(0.95);
-    }
-
-    /* Screens & Viewport */
-    .screen {
-      display: none !important;
-      flex-direction: column;
-      flex: 1;
-      overflow-y: auto;
-      padding-bottom: 85px; /* for bottom nav */
-    }
-    .screen.active {
-      display: flex !important;
-    }
-    .screen.no-nav {
-      padding-bottom: 0 !important;
-    }
-
-    /* Splash Screen */
-    #screen-splash {
-      background: linear-gradient(180deg, #071F0C 0%, #104318 60%, #1B5E20 100%);
-      color: white;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 30px 24px;
-      min-height: 100vh;
-      position: relative;
-    }
-    .splash-logo-box {
-      width: 130px;
-      height: 130px;
-      border-radius: 50%;
-      background: #ffffff;
-      padding: 6px;
-      box-shadow: 0 0 35px rgba(212,175,55,0.6), 0 0 0 4px var(--gold);
-      margin-bottom: 24px;
-      animation: pulseGlow 2.5s infinite alternate;
-    }
-    .splash-logo-box img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 20px rgba(212,175,55,0.4), 0 0 0 3px var(--gold); }
-      100% { box-shadow: 0 0 45px rgba(255,215,0,0.8), 0 0 0 6px #FFE57F; }
-    }
-    .splash-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      color: #FFFFFF;
-      margin-bottom: 6px;
-    }
-    .splash-sub {
-      color: var(--gold);
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 24px;
-    }
-    .credit-tag {
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(212,175,55,0.4);
+      font-size: 13px;
       padding: 8px 18px;
-      border-radius: 20px;
-      font-size: 12px;
-      color: #FFE082;
-      font-weight: 600;
+      border-radius: 24px;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      margin-bottom: 40px;
+      box-shadow: 0 4px 14px rgba(212,175,55,0.4);
+      transition: all 0.2s;
     }
-    .progress-bar-wrap {
-      width: 180px;
-      height: 5px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 10px;
-      overflow: hidden;
-      margin: 0 auto;
-    }
-    .progress-bar-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #FFD700, #FFF9C4);
-      border-radius: 10px;
-      animation: fillProgress 1.8s ease-in-out forwards;
-    }
-    @keyframes fillProgress {
-      0% { width: 0%; }
-      100% { width: 100%; }
+    .btn-download-hero:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(212,175,55,0.6);
     }
 
-    /* Welcome / Role Choice */
-    #screen-welcome {
-      background: #FFFFFF;
-      padding: 40px 24px 24px;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 100vh;
-    }
-    .role-card {
+    /* MAIN HEADER */
+    .main-nav {
       background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
       display: flex;
       align-items: center;
-      gap: 16px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      margin-bottom: 16px;
+      justify-content: space-between;
       box-shadow: var(--shadow-sm);
     }
-    .role-card:active, .role-card:hover {
-      border-color: var(--primary);
-      background: var(--primary-subtle);
-      transform: translateY(-2px);
-    }
-    .role-card.admin:active, .role-card.admin:hover {
-      border-color: var(--gold-dark);
-      background: var(--gold-light);
-    }
-    .role-icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 14px;
-      background: var(--primary-subtle);
-      color: var(--primary);
+    .brand-wrap {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      flex-shrink: 0;
+      gap: 14px;
+      text-decoration: none;
+      color: inherit;
     }
-    .role-card.admin .role-icon {
-      background: var(--gold-light);
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid var(--gold);
+      object-fit: cover;
+      background: #FFFFFF;
+    }
+    .brand-text h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      letter-spacing: -0.3px;
+    }
+    .brand-text p {
+      font-size: 12px;
       color: var(--gold-dark);
+      font-weight: 700;
     }
-
-    /* Auth Screens (Login / Register) */
-    .auth-header {
-      background: linear-gradient(145deg, #0A2E12 0%, #1B5E20 100%);
-      padding: 30px 24px;
-      color: white;
-      border-radius: 0 0 24px 24px;
-      margin-bottom: 24px;
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .form-box {
-      padding: 0 20px 24px;
-    }
-    .form-group {
-      margin-bottom: 18px;
-    }
-    .form-group label {
-      display: block;
+    .nav-tab-btn {
+      padding: 8px 14px;
+      border-radius: 10px;
       font-size: 13px;
       font-weight: 700;
-      color: var(--text);
-      margin-bottom: 6px;
-    }
-    .input-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    .input-wrap input {
-      width: 100%;
-      height: 48px;
-      padding: 10px 14px 10px 42px;
-      font-size: 15px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-md);
-      background: var(--surface);
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .input-wrap input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(27,94,32,0.12);
-    }
-    .input-icon {
-      position: absolute;
-      left: 14px;
-      font-size: 18px;
-      color: var(--text-muted);
-      pointer-events: none;
-    }
-    .toggle-pwd {
-      position: absolute;
-      right: 14px;
-      cursor: pointer;
-      font-size: 18px;
-      color: var(--text-muted);
-    }
-    .strength-bar {
-      height: 4px;
-      border-radius: 2px;
-      background: #E2E8F0;
-      margin-top: 6px;
-      overflow: hidden;
-    }
-    .strength-fill {
-      height: 100%;
-      width: 0%;
-      transition: all 0.3s;
-    }
-
-    /* Buttons */
-    .btn-primary {
-      background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
-      color: white;
       border: none;
-      width: 100%;
-      height: 50px;
-      border-radius: var(--radius-md);
-      font-size: 15px;
-      font-weight: 700;
+      background: transparent;
+      color: var(--text-muted);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 4px 14px rgba(27,94,32,0.3);
       transition: all 0.2s;
     }
-    .btn-primary:active {
-      transform: scale(0.98);
+    .nav-tab-btn.active, .nav-tab-btn:hover {
+      background: var(--primary-subtle);
+      color: var(--primary);
     }
-    .btn-gold {
-      background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
-      color: #0A2E12;
+    .btn-portal-role {
+      background: var(--primary);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 10px;
       border: none;
-      font-weight: 800;
-      box-shadow: 0 4px 14px rgba(212,175,55,0.4);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
     }
 
-    /* App Header / Navigation */
-    .app-topbar {
+    /* MAIN CONTAINER */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* HERO BANNER */
+    .hero-banner {
+      background: linear-gradient(135deg, #071F0C 0%, #104318 50%, #1B5E20 100%);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid rgba(212,175,55,0.4);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .hero-banner h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #FFFFFF;
+    }
+    .hero-banner p {
+      font-size: 15px;
+      color: #C8E6C9;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+    .creator-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid var(--gold);
+      color: #FFE082;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 14px;
+    }
+
+    /* LAYOUT GRIDS */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+      .nav-tabs {
+        display: none;
+      }
+    }
+
+    .card {
       background: var(--surface);
-      padding: 14px 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary-dark);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 48px; /* below top-apk-banner */
-      z-index: 100;
-    }
-    .user-badge {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .avatar-circle {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #1B5E20, #D4AF37);
-      color: white;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    }
-    .header-icons {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .icon-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      cursor: pointer;
-      position: relative;
-    }
-    .badge-dot {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #E11D48;
+      margin-bottom: 18px;
     }
 
-    /* Bottom Navigation Bar */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      max-width: 480px;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-around;
-      padding: 8px 0 12px;
-      z-index: 500;
-      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
-    }
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-size: 11px;
-      color: var(--text-muted);
-      cursor: pointer;
-      gap: 4px;
-      font-weight: 600;
-      flex: 1;
-    }
-    .nav-item .nav-icon {
-      font-size: 20px;
-      transition: transform 0.2s;
-    }
-    .nav-item.active {
-      color: var(--primary);
-    }
-    .nav-item.active .nav-icon {
-      transform: translateY(-2px);
-    }
-
-    /* Cards & Layout */
-    .content-pad {
-      padding: 18px 18px;
-    }
-    .hero-card {
-      background: linear-gradient(145deg, #0A2E12 0%, #1B5E20 70%, #2E7D32 100%);
-      color: white;
-      border-radius: var(--radius-lg);
-      padding: 22px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow-md);
-      position: relative;
-      overflow: hidden;
-    }
-    .hero-card::after {
-      content: '';
-      position: absolute;
-      right: -30px;
-      bottom: -30px;
-      width: 130px;
-      height: 130px;
-      border-radius: 50%;
-      background: rgba(212,175,55,0.15);
-      pointer-events: none;
-    }
-    .stat-grid {
+    /* SHIFT SELECTOR */
+    .shift-row {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
       margin-bottom: 20px;
     }
-    .stat-card {
-      background: var(--surface);
+    @media (max-width: 600px) {
+      .shift-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .shift-box {
+      border: 2px solid var(--border);
+      background: #F8FAFC;
+      padding: 12px;
       border-radius: var(--radius-md);
-      padding: 16px;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-    }
-    .stat-val {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--primary);
-      margin-top: 4px;
-    }
-
-    /* Seat Floor Map */
-    .shift-tabs {
-      display: flex;
-      gap: 6px;
-      background: var(--surface);
-      padding: 6px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border);
-      margin-bottom: 16px;
-      overflow-x: auto;
-    }
-    .shift-tab {
-      flex: 1;
-      padding: 8px 10px;
       text-align: center;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
       cursor: pointer;
-      white-space: nowrap;
       transition: all 0.2s;
     }
-    .shift-tab.active {
-      background: var(--primary);
-      color: white;
-      box-shadow: 0 2px 6px rgba(27,94,32,0.3);
+    .shift-box.active {
+      border-color: var(--primary);
+      background: var(--primary-subtle);
+      box-shadow: 0 4px 12px rgba(27,94,32,0.15);
+    }
+    .shift-box h4 {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary-dark);
+    }
+    .shift-box span {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
     }
 
-    .seat-grid-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 18px;
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 20px;
-    }
-    .desk-board {
+    /* 36 SEATS FLOOR MAP */
+    .desk-header {
       background: #E2E8F0;
-      color: #475569;
-      font-size: 11px;
+      color: #334155;
+      font-size: 12px;
       font-weight: 800;
       text-align: center;
-      padding: 6px;
-      border-radius: 6px;
+      padding: 8px;
+      border-radius: 8px;
       letter-spacing: 2px;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
     .seats-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 8px;
+      gap: 10px;
+      margin-bottom: 18px;
     }
-    .seat-box {
+    .seat-cube {
       aspect-ratio: 1;
-      border-radius: 8px;
+      border-radius: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 800;
       cursor: pointer;
-      position: relative;
       transition: all 0.2s;
       user-select: none;
+      position: relative;
     }
-    .seat-box.available {
+    .seat-cube.available {
       background: #E8F5E9;
       color: #1B5E20;
-      border: 1.5px solid #A5D6A7;
+      border: 2px solid #A5D6A7;
     }
-    .seat-box.occupied {
+    .seat-cube.available:hover {
+      transform: scale(1.06);
+      border-color: #2E7D32;
+    }
+    .seat-cube.occupied {
       background: #FFE4E6;
       color: #BE123C;
-      border: 1.5px solid #FDA4AF;
+      border: 2px solid #FDA4AF;
       cursor: not-allowed;
     }
-    .seat-box.selected {
+    .seat-cube.selected {
       background: #FFD700;
       color: #0A2E12;
       border: 2px solid #B8860B;
       transform: scale(1.08);
-      box-shadow: 0 4px 12px rgba(212,175,55,0.5);
+      box-shadow: 0 4px 14px rgba(212,175,55,0.6);
     }
-
-    .seat-legend {
+    .legend-row {
       display: flex;
-      justify-content: space-around;
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-      font-size: 12px;
+      justify-content: center;
+      gap: 24px;
+      font-size: 13px;
       font-weight: 600;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
     }
-    .legend-item {
+    .legend-tag {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
-    .legend-dot {
-      width: 14px;
-      height: 14px;
+    .legend-color {
+      width: 16px;
+      height: 16px;
       border-radius: 4px;
     }
 
-    /* ID Card Screen */
-    .id-card-wrap {
-      background: linear-gradient(135deg, #0A2E12 0%, #1B5E20 60%, #2E7D32 100%);
+    /* RIGHT COLUMN WIDGETS */
+    .clock-widget {
+      background: linear-gradient(135deg, #0A2E12, #1B5E20);
       color: white;
-      border-radius: 20px;
+      border-radius: var(--radius-lg);
       padding: 24px;
-      box-shadow: var(--shadow-lg);
-      position: relative;
-      overflow: hidden;
-      border: 2px solid var(--gold);
+      text-align: center;
+      margin-bottom: 24px;
+      border: 1px solid var(--gold);
     }
-    .id-card-header {
+    .clock-time {
+      font-size: 36px;
+      font-weight: 800;
+      font-family: monospace;
+      color: #FFD700;
+      margin: 8px 0;
+    }
+    .punch-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .btn-punch {
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-punch-in {
+      background: #16A34A;
+      color: white;
+    }
+    .btn-punch-out {
+      background: #DC2626;
+      color: white;
+    }
+
+    /* ID CARD PREVIEW */
+    .id-card {
+      background: linear-gradient(135deg, #071F0C 0%, #1B5E20 70%, #2E7D32 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 20px;
+      border: 2px solid var(--gold);
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+    .id-head {
       display: flex;
       align-items: center;
       gap: 12px;
       border-bottom: 1px solid rgba(212,175,55,0.4);
-      padding-bottom: 16px;
-      margin-bottom: 18px;
-    }
-    .id-body {
-      display: flex;
-      gap: 16px;
-    }
-    .id-photo {
-      width: 80px;
-      height: 95px;
-      background: #E2E8F0;
-      border-radius: 10px;
-      border: 2px solid var(--gold);
-      object-fit: cover;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
     }
     .id-details {
-      flex: 1;
       font-size: 13px;
-    }
-    .id-details h3 {
-      font-size: 18px;
-      color: #FFFFFF;
-      margin-bottom: 4px;
-    }
-    .id-details p {
-      color: #E2E8F0;
-      margin-bottom: 4px;
-    }
-    .id-badge {
-      background: var(--gold);
-      color: #0A2E12;
-      font-weight: 800;
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 6px;
-      display: inline-block;
-      margin-top: 4px;
+      line-height: 1.6;
     }
     .id-barcode {
-      margin-top: 20px;
-      padding-top: 14px;
+      margin-top: 16px;
+      padding-top: 12px;
       border-top: 1px dashed rgba(255,255,255,0.3);
-      text-align: center;
-      letter-spacing: 4px;
       font-family: monospace;
       font-size: 14px;
+      letter-spacing: 4px;
       color: var(--gold);
+      text-align: center;
     }
 
-    /* Modal / Bottom Sheet */
+    /* BUTTONS */
+    .btn-primary {
+      background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(27,94,32,0.25);
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(27,94,32,0.35);
+    }
+
+    /* MODAL */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 1200;
+      background: rgba(0,0,0,0.65);
       display: none;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
+      z-index: 2000;
+      padding: 20px;
     }
     .modal-overlay.active {
       display: flex;
     }
-    .modal-sheet {
+    .modal-box {
       background: var(--surface);
-      width: 100%;
       max-width: 480px;
-      border-radius: 24px 24px 0 0;
-      padding: 24px;
-      max-height: 85vh;
+      width: 100%;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: var(--shadow-lg);
+      max-height: 90vh;
       overflow-y: auto;
-      animation: slideUp 0.3s ease;
+      animation: zoomIn 0.25s ease;
     }
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-
-    /* Notice Banner */
-    .notice-item {
-      background: #FFFBEB;
-      border-left: 4px solid var(--gold-dark);
-      padding: 12px 14px;
-      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-      margin-bottom: 12px;
-      font-size: 13px;
+    @keyframes zoomIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
     .pill {
       display: inline-block;
-      padding: 4px 10px;
+      padding: 4px 12px;
       border-radius: 20px;
       font-size: 11px;
       font-weight: 700;
     }
     .pill-green { background: #DCFCE7; color: #15803D; }
-    .pill-red { background: #FEE2E2; color: #B91C1C; }
     .pill-gold { background: #FEF3C7; color: #B45309; }
 
-    /* Admin Panel */
-    .admin-bar {
-      background: #B45309;
-      color: white;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      display: flex;
-      justify-content: space-between;
+    /* FOOTER */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 40px;
     }
   </style>
 </head>
 <body>
 
-<div class="app-shell">
-
-  <!-- TOP PERSISTENT APK DOWNLOAD BAR -->
-  <div class="top-apk-banner">
-    <div>
-      <span class="badge">OFFICIAL ANDROID APP</span>
-      <div style="font-weight:700; margin-top:2px;">Maa Durga Digital Library</div>
+  <!-- TOP BAR -->
+  <div class="top-strip">
+    <div class="top-strip-left">
+      <span class="badge-apk">OFFICIAL ANDROID APP</span>
+      <strong>Maa Durga Digital Library</strong> • 36 AC Seats & Real-time Biometric/QR Desk
     </div>
-    <a href="./downloads/MaaDurgaLibrary.apk" download="MaaDurgaLibrary.apk" class="btn-dl-apk">
-      <span>⬇️</span> Download APK
+    <a href="./downloads/MaaDurgaLibrary.apk" download="MaaDurgaLibrary.apk" class="btn-download-hero">
+      <span>⬇️</span> Download APK (29 MB)
     </a>
   </div>
 
-  <!-- SCREEN 1: SPLASH SCREEN -->
-  <div id="screen-splash" class="screen active no-nav">
-    <div class="splash-logo-box">
-      <img src="assets/ic_digital_library_logo.jpg" alt="Maa Durga Digital Library Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
-    </div>
-    <h1 class="splash-title">Maa Durga Digital Library</h1>
-    <div class="splash-sub">Where Focus Meets Ambition</div>
-    <div class="credit-tag">
-      <span>✨</span> Created by Vivek & Prince
-    </div>
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-fill"></div>
-    </div>
-  </div>
-
-  <!-- SCREEN 2: WELCOME / PORTAL SELECTOR -->
-  <div id="screen-welcome" class="screen no-nav">
-    <div style="text-align:center; padding-top:20px;">
-      <div style="width:70px; height:70px; margin:0 auto 16px; border-radius:50%; border:2px solid var(--gold); overflow:hidden;">
-        <img src="assets/ic_digital_library_logo.jpg" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
+  <!-- NAVIGATION -->
+  <nav class="main-nav">
+    <a href="#" class="brand-wrap">
+      <img src="assets/ic_digital_library_logo.jpg" alt="Logo" class="brand-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
+      <div class="brand-text">
+        <h1>Maa Durga Digital Library</h1>
+        <p>Managed by Vivek & Prince</p>
       </div>
-      <h2 style="font-size:22px; font-weight:800; color:var(--primary-dark);">Welcome to the Desk</h2>
-      <p style="color:var(--text-muted); font-size:14px; margin-top:4px;">Select your portal to continue</p>
+    </a>
+    <div class="nav-tabs">
+      <button class="nav-tab-btn active" onclick="scrollToSection('seats-section')">36 Seats Plan</button>
+      <button class="nav-tab-btn" onclick="scrollToSection('attendance-section')">Live Attendance</button>
+      <button class="nav-tab-btn" onclick="scrollToSection('id-section')">Student ID</button>
+      <button class="btn-portal-role" onclick="openStudentModal()">Student Login / Register</button>
+      <button class="btn-portal-role" style="background:#B45309;" onclick="openAdminModal()">Admin Desk</button>
     </div>
+  </nav>
 
-    <div style="margin: auto 0;">
-      <!-- Student Portal Button -->
-      <div class="role-card" onclick="showScreen('screen-login')">
-        <div class="role-icon">🎓</div>
-        <div style="flex:1;">
-          <h3 style="font-size:16px; font-weight:700; color:var(--text);">Student Portal</h3>
-          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Book 36 AC Seats, Mark Attendance, ID Card & Fees</p>
-        </div>
-        <span style="color:var(--primary); font-weight:800; font-size:18px;">➔</span>
-      </div>
+  <!-- MAIN CONTAINER -->
+  <div class="container">
 
-      <!-- Admin Portal Button -->
-      <div class="role-card admin" onclick="showScreen('screen-admin-login')">
-        <div class="role-icon">🛡️</div>
-        <div style="flex:1;">
-          <h3 style="font-size:16px; font-weight:700; color:var(--text);">Administrator Portal</h3>
-          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Manage Seats, Approve Verifications, Notice Board</p>
-        </div>
-        <span style="color:var(--gold-dark); font-weight:800; font-size:18px;">➔</span>
-      </div>
-    </div>
-
-    <div style="text-align:center; padding:16px 0; font-size:12px; color:var(--text-muted); border-top:1px solid var(--border);">
-      Managed by <strong>Vivek & Prince</strong> • Powered by Maa Durga Digital Library
-    </div>
-  </div>
-
-  <!-- SCREEN 3: STUDENT LOGIN -->
-  <div id="screen-login" class="screen no-nav">
-    <div class="auth-header">
-      <div style="font-size:12px; color:var(--gold); font-weight:700; text-transform:uppercase;">Student Authentication</div>
-      <h2 style="font-size:24px; font-weight:800; margin-top:4px;">Sign In to Library</h2>
-      <p style="font-size:13px; color:#E2E8F0; margin-top:4px;">Enter your 10-digit mobile and password</p>
-    </div>
-
-    <div class="form-box">
-      <div class="form-group">
-        <label>Mobile Number</label>
-        <div class="input-wrap">
-          <span class="input-icon">📱</span>
-          <input type="tel" id="login-mobile" placeholder="10-digit mobile (e.g. 9876543210)" maxlength="10">
+    <!-- HERO BANNER -->
+    <div class="hero-banner">
+      <div>
+        <span class="pill pill-gold" style="margin-bottom:10px;">★ PIN-DROP SILENT STUDY SANCTUARY ★</span>
+        <h2>Where Focus Meets Ambition</h2>
+        <p>Book your dedicated air-conditioned desk among 36 reserved seats with 4 customizable shifts, high-speed 5G WiFi, and real-time attendance tracking.</p>
+        <div class="creator-pill">
+          <span>✨</span> Created & Affiliated by Vivek & Prince
         </div>
       </div>
-
-      <div class="form-group">
-        <label>Password</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔒</span>
-          <input type="password" id="login-password" placeholder="Enter your password">
-          <span class="toggle-pwd" onclick="togglePasswordVisibility('login-password')">👁️</span>
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
-        <a href="#" onclick="showScreen('screen-forgot-pwd')" style="font-size:13px; color:var(--primary); font-weight:700; text-decoration:none;">Forgot Password?</a>
-      </div>
-
-      <button class="btn-primary" onclick="handleStudentLogin()">
-        <span>Login to Desk</span> ➔
-      </button>
-
-      <div style="text-align:center; margin-top:24px; font-size:14px; color:var(--text-muted);">
-        Don't have an account? 
-        <a href="#" onclick="showScreen('screen-register')" style="color:var(--primary); font-weight:700; text-decoration:none;">Register Now</a>
-      </div>
-      
-      <div style="text-align:center; margin-top:16px;">
-        <button onclick="showScreen('screen-welcome')" style="background:none; border:none; color:var(--text-muted); font-size:13px; cursor:pointer;">
-          ← Back to Portal Selection
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCREEN 4: STUDENT REGISTER -->
-  <div id="screen-register" class="screen no-nav">
-    <div class="auth-header">
-      <div style="font-size:12px; color:var(--gold); font-weight:700; text-transform:uppercase;">New Student Admission</div>
-      <h2 style="font-size:24px; font-weight:800; margin-top:4px;">Create Account</h2>
-      <p style="font-size:13px; color:#E2E8F0; margin-top:4px;">Join Maa Durga Digital Library for focused studies</p>
-    </div>
-
-    <div class="form-box">
-      <div class="form-group">
-        <label>Full Name</label>
-        <div class="input-wrap">
-          <span class="input-icon">👤</span>
-          <input type="text" id="reg-name" placeholder="Enter student full name">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Mobile Number (Primary)</label>
-        <div class="input-wrap">
-          <span class="input-icon">📱</span>
-          <input type="tel" id="reg-mobile" placeholder="10-digit mobile number" maxlength="10">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Create Password</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔒</span>
-          <input type="password" id="reg-password" placeholder="At least 6 characters" oninput="checkPasswordStrength(this.value)">
-          <span class="toggle-pwd" onclick="togglePasswordVisibility('reg-password')">👁️</span>
-        </div>
-        <div class="strength-bar"><div id="strength-fill" class="strength-fill"></div></div>
-      </div>
-
-      <button class="btn-primary" onclick="handleStudentRegister()">
-        <span>Complete Registration</span> ➔
-      </button>
-
-      <div style="text-align:center; margin-top:20px; font-size:14px; color:var(--text-muted);">
-        Already registered? 
-        <a href="#" onclick="showScreen('screen-login')" style="color:var(--primary); font-weight:700; text-decoration:none;">Login here</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCREEN 5: FORGOT PASSWORD -->
-  <div id="screen-forgot-pwd" class="screen no-nav">
-    <div class="auth-header">
-      <div style="font-size:12px; color:var(--gold); font-weight:700; text-transform:uppercase;">Password Reset Request</div>
-      <h2 style="font-size:22px; font-weight:800; margin-top:4px;">Reset Password</h2>
-      <p style="font-size:13px; color:#E2E8F0; margin-top:4px;">Secure request forwarded to Library Admin for approval</p>
-    </div>
-
-    <div class="form-box">
-      <div class="form-group">
-        <label>Registered Mobile Number</label>
-        <div class="input-wrap">
-          <span class="input-icon">📱</span>
-          <input type="tel" id="forgot-mobile" placeholder="10-digit registered mobile" maxlength="10">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>New Password</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔒</span>
-          <input type="password" id="forgot-new-pwd" placeholder="Enter new password">
-        </div>
-      </div>
-
-      <button class="btn-primary" onclick="handleForgotPasswordRequest()">
-        <span>Submit Request to Admin</span> ➔
-      </button>
-
-      <div style="text-align:center; margin-top:20px;">
-        <button onclick="showScreen('screen-login')" style="background:none; border:none; color:var(--text-muted); font-size:13px; cursor:pointer;">
-          ← Back to Login
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCREEN 6: ADMIN LOGIN -->
-  <div id="screen-admin-login" class="screen no-nav">
-    <div class="auth-header" style="background: linear-gradient(145deg, #451A03 0%, #78350F 50%, #B45309 100%);">
-      <div style="font-size:12px; color:#FDE68A; font-weight:700; text-transform:uppercase;">Administrative Portal</div>
-      <h2 style="font-size:24px; font-weight:800; margin-top:4px;">Admin Access</h2>
-      <p style="font-size:13px; color:#FEF3C7; margin-top:4px;">Authorized Library Managers Only (Vivek & Prince)</p>
-    </div>
-
-    <div class="form-box">
-      <div class="form-group">
-        <label>Master Security Key or Admin PIN</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔑</span>
-          <input type="password" id="admin-key" placeholder="Enter Master Admin Key (e.g. MDDL@ADMIN2026)">
-        </div>
-        <small style="color:var(--text-muted); font-size:11px; margin-top:4px; display:block;">Default desk key: MDDL@ADMIN2026 or ADMIN9569</small>
-      </div>
-
-      <button class="btn-primary btn-gold" onclick="handleAdminLogin()">
-        <span>Access Admin Dashboard</span> ➔
-      </button>
-
-      <div style="text-align:center; margin-top:24px;">
-        <button onclick="showScreen('screen-welcome')" style="background:none; border:none; color:var(--text-muted); font-size:13px; cursor:pointer;">
-          ← Back to Portal Selection
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCREEN 7: STUDENT MAIN HOME (TAB 1) -->
-  <div id="screen-home" class="screen">
-    <div class="app-topbar">
-      <div class="user-badge">
-        <div class="avatar-circle" id="user-avatar">S</div>
-        <div>
-          <div style="font-size:11px; color:var(--text-muted); font-weight:600;">Welcome back,</div>
-          <div style="font-size:15px; font-weight:800; color:var(--text);" id="user-display-name">Student</div>
-        </div>
-      </div>
-      <div class="header-icons">
-        <div class="icon-btn" onclick="showScreen('screen-notifications')">
-          <span>🔔</span>
-          <span class="badge-dot" id="notif-badge"></span>
-        </div>
-        <div class="icon-btn" onclick="handleLogout()" title="Logout">
-          <span>🚪</span>
-        </div>
+      <div>
+        <a href="./downloads/MaaDurgaLibrary.apk" download="MaaDurgaLibrary.apk" class="btn-download-hero" style="font-size:15px; padding:12px 24px;">
+          <span>📱</span> Install Official Android App
+        </a>
       </div>
     </div>
 
-    <div class="content-pad">
-      <!-- Hero Card with Active Membership Info -->
-      <div class="hero-card">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-          <div>
-            <span class="pill pill-gold" id="membership-status-pill">ACTIVE MEMBERSHIP</span>
-            <h2 style="font-size:24px; font-weight:800; margin-top:8px;" id="hero-seat-label">Seat #--</h2>
-            <p style="font-size:13px; color:#C8E6C9; margin-top:2px;" id="hero-shift-label">No Active Shift</p>
+    <!-- MAIN TWO-COLUMN WORKSPACE -->
+    <div class="main-grid">
+
+      <!-- LEFT COLUMN: 36 SEATS FLOOR MAP -->
+      <div id="seats-section">
+        <div class="card">
+          <div class="card-title">
+            <span>36 Reserved AC Seats Floor Plan</span>
+            <span class="pill pill-green" id="avail-pill">31 Available</span>
           </div>
-          <div style="text-align:right;">
-            <div style="font-size:11px; color:#C8E6C9;">Valid Until</div>
-            <div style="font-size:15px; font-weight:700; color:#FFD700;" id="hero-validity-label">--/--/----</div>
+
+          <!-- Shift Selector Tabs -->
+          <div class="shift-row">
+            <div class="shift-box active" onclick="changeShift(1, this)">
+              <h4>Shift 1</h4>
+              <span>06:00 AM - 11:00 AM</span>
+            </div>
+            <div class="shift-box" onclick="changeShift(2, this)">
+              <h4>Shift 2</h4>
+              <span>11:00 AM - 04:00 PM</span>
+            </div>
+            <div class="shift-box" onclick="changeShift(3, this)">
+              <h4>Shift 3</h4>
+              <span>04:00 PM - 09:00 PM</span>
+            </div>
+            <div class="shift-box" onclick="changeShift(4, this)">
+              <h4>Shift 4</h4>
+              <span>09:00 PM - 06:00 AM</span>
+            </div>
+          </div>
+
+          <!-- Floor Plan Layout -->
+          <div class="desk-header">★ FRONT RECEPTION & ENTRANCE AISLE ★</div>
+          <div class="seats-grid" id="seats-container">
+            <!-- 36 Interactive Cubicles -->
+          </div>
+
+          <!-- Legend -->
+          <div class="legend-row">
+            <div class="legend-tag">
+              <div class="legend-color" style="background:#E8F5E9; border:2px solid #A5D6A7;"></div>
+              Available (₹400/m)
+            </div>
+            <div class="legend-tag">
+              <div class="legend-color" style="background:#FFE4E6; border:2px solid #FDA4AF;"></div>
+              Occupied
+            </div>
+            <div class="legend-tag">
+              <div class="legend-color" style="background:#FFD700; border:2px solid #B8860B;"></div>
+              Selected
+            </div>
+          </div>
+
+          <!-- Booking Action Bar -->
+          <div id="booking-bar" style="margin-top:20px; padding:16px; background:var(--primary-subtle); border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:12px; color:var(--text-muted); font-weight:700;">SELECTED SEAT</div>
+              <div style="font-size:20px; font-weight:800; color:var(--primary-dark);" id="selected-seat-title">Seat #02</div>
+            </div>
+            <button class="btn-primary" style="width:auto; padding:10px 24px;" onclick="openPaymentModal()">
+              Book & Pay via UPI ➔
+            </button>
+          </div>
+        </div>
+
+        <!-- NOTICE BOARD -->
+        <div class="card">
+          <div class="card-title">
+            <span>Notice Board 📢</span>
+            <span style="font-size:12px; color:var(--text-muted);">Updated by Desk</span>
+          </div>
+          <div style="background:#FFFBEB; border-left:4px solid var(--gold-dark); padding:14px; border-radius:0 8px 8px 0; font-size:14px;">
+            <strong>Maa Durga Digital Library Rules:</strong> Pin-drop silence strictly enforced in all 36 cubicles. High-speed 5G WiFi and power charging sockets enabled on all desks.
           </div>
         </div>
       </div>
 
-      <!-- Quick Stat Grid -->
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Attendance This Month</div>
-          <div class="stat-val" id="stat-attendance-pct">92%</div>
-        </div>
-        <div class="stat-card">
-          <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Days Remaining</div>
-          <div class="stat-val" id="stat-days-left">28 Days</div>
-        </div>
-      </div>
+      <!-- RIGHT COLUMN: ATTENDANCE & DIGITAL ID -->
+      <div>
 
-      <!-- Notice Board -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <h3 style="font-size:16px; font-weight:800;">Notice Board 📌</h3>
-        <span style="font-size:12px; color:var(--primary); font-weight:700;">Live Desk Updates</span>
-      </div>
-      <div id="notice-board-container">
-        <div class="notice-item">
-          <strong>Library Desk Announcement:</strong> Full silent AC study environment active. Please maintain pin-drop silence in all study halls.
-        </div>
-      </div>
+        <!-- REAL-TIME ATTENDANCE CLOCK -->
+        <div class="clock-widget" id="attendance-section">
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#C8E6C9;">Live Indian Standard Time (IST)</div>
+          <div class="clock-time" id="clock-display">--:--:--</div>
+          <div style="font-size:13px; color:#E8F5E9;" id="date-display">Today</div>
 
-      <!-- Quick Action Grid -->
-      <h3 style="font-size:16px; font-weight:800; margin: 20px 0 12px;">Quick Services</h3>
-      <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">
-        <div class="stat-card" style="cursor:pointer;" onclick="switchTab('screen-seats')">
-          <div style="font-size:24px; margin-bottom:6px;">🪑</div>
-          <div style="font-weight:700; font-size:14px;">Reserve Seat</div>
-          <div style="font-size:11px; color:var(--text-muted);">Pick from 36 AC Seats</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer;" onclick="switchTab('screen-attendance')">
-          <div style="font-size:24px; margin-bottom:6px;">⏱️</div>
-          <div style="font-weight:700; font-size:14px;">Mark Attendance</div>
-          <div style="font-size:11px; color:var(--text-muted);">Clock IN & OUT</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer;" onclick="switchTab('screen-idcard')">
-          <div style="font-size:24px; margin-bottom:6px;">🪪</div>
-          <div style="font-weight:700; font-size:14px;">Digital ID Card</div>
-          <div style="font-size:11px; color:var(--text-muted);">View Barcode & Roll</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer;" onclick="openPaymentModal()">
-          <div style="font-size:24px; margin-bottom:6px;">💳</div>
-          <div style="font-weight:700; font-size:14px;">Pay Fees (UPI)</div>
-          <div style="font-size:11px; color:var(--text-muted);">Submit UTR Proof</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCREEN 8: SEATS TAB (TAB 2) -->
-  <div id="screen-seats" class="screen">
-    <div class="app-topbar">
-      <h2 style="font-size:18px; font-weight:800;">36 Reserved AC Seats</h2>
-      <span class="pill pill-green" id="available-count-pill">31 Available</span>
-    </div>
-
-    <div class="content-pad">
-      <!-- Shift Selector Tabs -->
-      <div class="shift-tabs">
-        <div class="shift-tab active" onclick="selectShift(1, this)">Shift 1<br><small>6AM-11AM</small></div>
-        <div class="shift-tab" onclick="selectShift(2, this)">Shift 2<br><small>11AM-4PM</small></div>
-        <div class="shift-tab" onclick="selectShift(3, this)">Shift 3<br><small>4PM-9PM</small></div>
-        <div class="shift-tab" onclick="selectShift(4, this)">Shift 4<br><small>9PM-6AM</small></div>
-      </div>
-
-      <!-- Floor Plan Box -->
-      <div class="seat-grid-container">
-        <div class="desk-board">★ FRONT STUDY AISLE & RECEPTION ★</div>
-        <div class="seats-grid" id="seats-grid-layout">
-          <!-- 36 Seats rendered dynamically -->
-        </div>
-        <div class="seat-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#E8F5E9; border:1px solid #A5D6A7;"></div> Available</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#FFE4E6; border:1px solid #FDA4AF;"></div> Occupied</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#FFD700; border:1px solid #B8860B;"></div> Selected</div>
-        </div>
-      </div>
-
-      <!-- Selected Seat Summary & Action -->
-      <div class="stat-card" id="seat-booking-summary" style="display:none; margin-bottom:20px; border:2px solid var(--primary);">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Selected Seat</div>
-            <div style="font-size:20px; font-weight:800; color:var(--primary);" id="selected-seat-text">Seat #02</div>
-          </div>
-          <button class="btn-primary" style="width:auto; padding:0 20px;" onclick="openPaymentModal()">
-            Proceed to Book ➔
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCREEN 9: ATTENDANCE TAB (TAB 3) -->
-  <div id="screen-attendance" class="screen">
-    <div class="app-topbar">
-      <h2 style="font-size:18px; font-weight:800;">Real-time Attendance</h2>
-      <span class="pill pill-green" id="attendance-status-pill">DESK ACTIVE</span>
-    </div>
-
-    <div class="content-pad">
-      <!-- Live Clock Box -->
-      <div class="hero-card" style="text-align:center; padding:30px 20px;">
-        <div style="font-size:12px; color:#C8E6C9; letter-spacing:1px; text-transform:uppercase;">Current Indian Standard Time</div>
-        <div style="font-size:36px; font-weight:800; font-family:monospace; margin:8px 0; color:#FFD700;" id="live-clock">--:--:--</div>
-        <div style="font-size:13px; color:#E8F5E9;" id="live-date">Today</div>
-      </div>
-
-      <!-- Action Buttons (Punch IN / OUT) -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
-        <button class="btn-primary" onclick="markAttendance('IN')" style="background:linear-gradient(135deg, #15803D, #166534);">
-          <span>⏱️ PUNCH IN</span>
-        </button>
-        <button class="btn-primary" onclick="markAttendance('OUT')" style="background:linear-gradient(135deg, #DC2626, #991B1B);">
-          <span>🚪 PUNCH OUT</span>
-        </button>
-      </div>
-
-      <!-- Attendance History -->
-      <h3 style="font-size:16px; font-weight:800; margin-bottom:12px;">Recent Attendance Log</h3>
-      <div id="attendance-log-container">
-        <div class="stat-card" style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <div style="font-weight:700; font-size:14px;">Today</div>
-            <div style="font-size:12px; color:var(--text-muted);">IN: 08:30 AM • OUT: Active</div>
-          </div>
-          <span class="pill pill-green">PRESENT</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCREEN 10: ID CARD TAB (TAB 4) -->
-  <div id="screen-idcard" class="screen">
-    <div class="app-topbar">
-      <h2 style="font-size:18px; font-weight:800;">Digital Student ID</h2>
-      <button onclick="window.print()" class="pill pill-gold" style="border:none; cursor:pointer;">Print / Save</button>
-    </div>
-
-    <div class="content-pad">
-      <div class="id-card-wrap">
-        <div class="id-card-header">
-          <div style="width:44px; height:44px; border-radius:50%; background:white; overflow:hidden; border:2px solid var(--gold);">
-            <img src="assets/ic_digital_library_logo.jpg" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
-          </div>
-          <div>
-            <div style="font-size:15px; font-weight:800; color:white; letter-spacing:0.5px;">MAA DURGA DIGITAL LIBRARY</div>
-            <div style="font-size:10px; color:var(--gold); font-weight:600;">Managed by Vivek & Prince • ISO Certified Study Hub</div>
+          <div class="punch-btns">
+            <button class="btn-punch btn-punch-in" onclick="punchAttendance('IN')">⏱️ PUNCH IN</button>
+            <button class="btn-punch btn-punch-out" onclick="punchAttendance('OUT')">🚪 PUNCH OUT</button>
           </div>
         </div>
 
-        <div class="id-body">
-          <div class="id-photo" id="id-photo-placeholder">👤</div>
-          <div class="id-details">
-            <h3 id="id-card-name">Vivek Verma</h3>
-            <p><strong>Roll ID:</strong> <span id="id-card-roll">MDDL-2026-0842</span></p>
-            <p><strong>Mobile:</strong> <span id="id-card-mobile">+91 9876543210</span></p>
-            <p><strong>Seat:</strong> <span id="id-card-seat">Seat #02 (Shift 1)</span></p>
-            <span class="id-badge">VERIFIED MEMBER</span>
+        <!-- DIGITAL ID CARD -->
+        <div class="card" id="id-section">
+          <div class="card-title">
+            <span>Digital Student ID Card</span>
+            <span class="pill pill-gold">ACTIVE PASS</span>
+          </div>
+          <div class="id-card">
+            <div class="id-head">
+              <img src="assets/ic_digital_library_logo.jpg" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--gold);" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3389/3389081.png'">
+              <div>
+                <div style="font-weight:800; font-size:14px;">MAA DURGA DIGITAL LIBRARY</div>
+                <div style="font-size:10px; color:var(--gold);">Affiliated & Managed by Vivek & Prince</div>
+              </div>
+            </div>
+            <div class="id-details">
+              <div><strong>Name:</strong> <span id="id-name">Vivek Verma</span></div>
+              <div><strong>Student ID:</strong> <span id="id-roll">MDDL-2026-0842</span></div>
+              <div><strong>Seat No:</strong> <span id="id-seat">Seat #02 (Shift 1)</span></div>
+              <div><strong>Validity:</strong> 31 Oct 2026</div>
+            </div>
+            <div class="id-barcode">
+              ||| | ||||| || |||| ||||| |||| || |||
+            </div>
           </div>
         </div>
 
-        <div class="id-barcode">
-          ||| | ||||| || |||| ||||| |||| || |||
-          <div style="font-size:11px; margin-top:4px;">OFFICIAL DIGITAL CREDENTIAL</div>
-        </div>
       </div>
+
     </div>
+
   </div>
 
-  <!-- SCREEN 11: NOTIFICATIONS (ISOLATED) -->
-  <div id="screen-notifications" class="screen">
-    <div class="app-topbar">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <button onclick="showScreen('screen-home')" style="background:none; border:none; font-size:20px; cursor:pointer;">←</button>
-        <h2 style="font-size:18px; font-weight:800;">Notifications</h2>
-      </div>
-      <button onclick="clearUserNotifications()" style="background:none; border:none; color:var(--primary); font-size:12px; font-weight:700; cursor:pointer;">Mark all read</button>
-    </div>
-
-    <div class="content-pad" id="notifications-list">
-      <!-- Isolated notifications for this user only -->
-    </div>
-  </div>
-
-  <!-- SCREEN 12: ADMIN DASHBOARD -->
-  <div id="screen-admin-dash" class="screen no-nav">
-    <div class="admin-bar">
-      <span>🛡️ ADMIN DESK • VIVEK & PRINCE</span>
-      <a href="#" onclick="showScreen('screen-welcome')" style="color:white; text-decoration:none;">Exit Desk</a>
-    </div>
-
-    <div class="content-pad">
-      <h2 style="font-size:22px; font-weight:800; margin-bottom:16px;">Library Operations</h2>
-
-      <!-- Metrics -->
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div style="font-size:12px; color:var(--text-muted);">Total Active Students</div>
-          <div class="stat-val" id="admin-total-students">12</div>
-        </div>
-        <div class="stat-card">
-          <div style="font-size:12px; color:var(--text-muted);">Occupied Seats</div>
-          <div class="stat-val" id="admin-occupied-seats">5 / 36</div>
-        </div>
-      </div>
-
-      <!-- Pending Verifications -->
-      <h3 style="font-size:16px; font-weight:800; margin:16px 0 8px;">Pending Payment Verifications ⏳</h3>
-      <div id="admin-verifications-list">
-        <div class="stat-card" style="margin-bottom:8px;">
-          <div style="display:flex; justify-content:space-between;">
-            <strong>Aman Sharma (+91 9876543210)</strong>
-            <span class="pill pill-gold">PENDING</span>
-          </div>
-          <div style="font-size:12px; color:var(--text-muted); margin:4px 0;">Seat #05 • Shift 1 • ₹400 via UPI (UTR: 329847291823)</div>
-          <div style="display:flex; gap:8px; margin-top:8px;">
-            <button class="btn-primary" style="height:36px; font-size:12px;" onclick="approvePaymentVerification(this)">Approve & Allot Seat</button>
-            <button class="btn-primary" style="height:36px; font-size:12px; background:#DC2626;" onclick="this.parentElement.parentElement.remove()">Reject</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Broadcast Notice to Students -->
-      <h3 style="font-size:16px; font-weight:800; margin:20px 0 8px;">Broadcast Notice Board</h3>
-      <div class="form-group">
-        <input type="text" id="admin-notice-input" placeholder="Type new announcement for students..." style="width:100%; height:42px; padding:8px 12px; border:1px solid var(--border); border-radius:8px;">
-      </div>
-      <button class="btn-primary" style="height:42px;" onclick="publishAdminNotice()">Publish Notice to All Students</button>
-    </div>
-  </div>
-
-  <!-- BOTTOM NAVIGATION BAR (Visible on Student Tabs) -->
-  <div class="bottom-nav" id="main-bottom-nav" style="display:none;">
-    <div class="nav-item active" onclick="switchTab('screen-home', this)">
-      <span class="nav-icon">🏠</span>
-      <span>Home</span>
-    </div>
-    <div class="nav-item" onclick="switchTab('screen-seats', this)">
-      <span class="nav-icon">🪑</span>
-      <span>36 Seats</span>
-    </div>
-    <div class="nav-item" onclick="switchTab('screen-attendance', this)">
-      <span class="nav-icon">⏱️</span>
-      <span>Attendance</span>
-    </div>
-    <div class="nav-item" onclick="switchTab('screen-idcard', this)">
-      <span class="nav-icon">🪪</span>
-      <span>ID Card</span>
-    </div>
-    <div class="nav-item" onclick="showScreen('screen-notifications')">
-      <span class="nav-icon">🔔</span>
-      <span>Alerts</span>
-    </div>
-  </div>
-
-  <!-- MODAL: BOOKING & UPI PAYMENT PROOF -->
-  <div class="modal-overlay" id="payment-modal">
-    <div class="modal-sheet">
+  <!-- PAYMENT & UPI MODAL -->
+  <div class="modal-overlay" id="pay-modal">
+    <div class="modal-box">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="font-size:18px; font-weight:800;">Confirm Seat & UPI Payment</h3>
-        <button onclick="closePaymentModal()" style="background:none; border:none; font-size:22px; cursor:pointer;">✕</button>
+        <h3 style="font-size:18px; font-weight:800;">UPI Payment & Verification</h3>
+        <button onclick="closeModal('pay-modal')" style="background:none; border:none; font-size:22px; cursor:pointer;">✕</button>
       </div>
 
       <div style="background:var(--primary-subtle); padding:14px; border-radius:12px; margin-bottom:16px;">
         <div style="display:flex; justify-content:space-between;">
-          <span style="font-weight:700;">Selected Seat:</span>
-          <span style="font-weight:800; color:var(--primary);" id="modal-seat-num">Seat #02</span>
+          <strong>Seat:</strong>
+          <span id="modal-seat-label" style="color:var(--primary); font-weight:800;">Seat #02</span>
         </div>
         <div style="display:flex; justify-content:space-between; margin-top:4px;">
-          <span style="font-weight:700;">Shift:</span>
-          <span id="modal-shift-name">Shift 1 (6AM - 11AM)</span>
+          <strong>Shift:</strong>
+          <span id="modal-shift-label">Shift 1</span>
         </div>
         <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:16px;">
-          <span style="font-weight:800;">Monthly Fee:</span>
-          <span style="font-weight:800; color:var(--primary);" id="modal-fee-amount">₹400</span>
+          <strong>Amount Due:</strong>
+          <span style="color:var(--primary); font-weight:800;">₹400 / Month</span>
         </div>
       </div>
 
-      <div style="text-align:center; padding:12px; border:1px dashed var(--border); border-radius:12px; margin-bottom:16px;">
-        <div style="font-size:12px; color:var(--text-muted); font-weight:700;">SCAN TO PAY VIA ANY UPI APP (PhonePe / GPay / Paytm)</div>
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=9569733445@okbizaxis&pn=MaaDurgaDigitalLibrary&am=400" style="margin:10px auto; display:block; border-radius:8px;">
+      <div style="text-align:center; padding:14px; border:1px dashed var(--border); border-radius:12px; margin-bottom:16px;">
+        <div style="font-size:12px; color:var(--text-muted); font-weight:700;">SCAN WITH ANY UPI APP (PhonePe / GPay / Paytm)</div>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=9569733445@okbizaxis&pn=MaaDurgaDigitalLibrary&am=400" style="margin:12px auto; display:block; border-radius:8px;">
         <div style="font-size:13px; font-weight:700; color:var(--primary-dark);">UPI ID: 9569733445@okbizaxis</div>
       </div>
 
-      <div class="form-group">
-        <label>12-Digit UPI Transaction ID / UTR</label>
-        <div class="input-wrap">
-          <span class="input-icon">🧾</span>
-          <input type="text" id="modal-utr" placeholder="e.g. 423987123984" maxlength="12">
-        </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">12-Digit UPI Transaction ID / UTR</label>
+        <input type="text" id="utr-input" placeholder="e.g. 423987123984" style="width:100%; height:44px; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px;">
       </div>
 
-      <button class="btn-primary" onclick="submitPaymentProof()">
-        Submit Payment Proof ➔
-      </button>
+      <button class="btn-primary" onclick="submitPayment()">Submit Verification Proof ➔</button>
     </div>
   </div>
 
-</div>
-
-<script>
-  // In-Browser Database State (Synced with localStorage)
-  const DB_KEY = 'MDDL_DB_STATE_V1';
-  let db = JSON.parse(localStorage.getItem(DB_KEY)) || {
-    users: [
-      { id: 'STU-101', fullName: 'Vivek Verma', mobile: '9569733445', password: 'password123', seat: '02', shift: 'Shift 1' }
-    ],
-    currentUser: null,
-    currentShift: 1,
-    selectedSeat: '02',
-    seatsState: {
-      1: { '01': 'OCCUPIED', '02': 'AVAILABLE', '03': 'AVAILABLE', '04': 'OCCUPIED' },
-      2: { '02': 'AVAILABLE', '05': 'OCCUPIED' },
-      3: { '02': 'AVAILABLE' },
-      4: { '02': 'AVAILABLE' }
-    },
-    notifications: [
-      { id: 'N1', targetId: null, title: 'Welcome to Maa Durga Digital Library 📚', desc: 'Your 36-Seat Air Conditioned Silent Hub is now live.', timestamp: 'Just now', isRead: false }
-    ],
-    attendanceLog: []
-  };
-
-  function saveDb() {
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-  }
-
-  // Navigation Controller
-  function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const target = document.getElementById(screenId);
-    if (target) target.classList.add('active');
-
-    const bottomNav = document.getElementById('main-bottom-nav');
-    const isStudentTab = ['screen-home', 'screen-seats', 'screen-attendance', 'screen-idcard'].includes(screenId);
-    if (bottomNav) {
-      bottomNav.style.display = isStudentTab ? 'flex' : 'none';
-    }
-  }
-
-  function switchTab(screenId, el) {
-    showScreen(screenId);
-    if (el) {
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      el.classList.add('active');
-    }
-  }
-
-  // Splash auto timeout
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      // If user was previously logged in
-      if (db.currentUser) {
-        updateStudentUI();
-        showScreen('screen-home');
-      } else {
-        showScreen('screen-welcome');
-      }
-    }, 1800);
-
-    // Start Live Clock
-    setInterval(updateClock, 1000);
-    renderSeats();
-  });
-
-  function updateClock() {
-    const now = new Date();
-    const clockEl = document.getElementById('live-clock');
-    const dateEl = document.getElementById('live-date');
-    if (clockEl) {
-      clockEl.innerText = now.toLocaleTimeString('en-US', { hour12: true });
-    }
-    if (dateEl) {
-      dateEl.innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
-    }
-  }
-
-  // Student Auth Handlers
-  function handleStudentLogin() {
-    const mobile = document.getElementById('login-mobile').value.trim();
-    const pwd = document.getElementById('login-password').value.trim();
-
-    if (mobile.length !== 10) {
-      alert('Please enter a valid 10-digit mobile number.');
-      return;
-    }
-    if (!pwd) {
-      alert('Please enter your password.');
-      return;
-    }
-
-    let user = db.users.find(u => u.mobile === mobile && u.password === pwd);
-    if (!user) {
-      // Auto-register demo student if doesn't exist for seamless user testing
-      user = { id: 'STU-' + Date.now().toString().slice(-4), fullName: 'Student ' + mobile.slice(-4), mobile: mobile, password: pwd, seat: '02', shift: 'Shift 1' };
-      db.users.push(user);
-    }
-
-    db.currentUser = user;
-    saveDb();
-    updateStudentUI();
-    showScreen('screen-home');
-  }
-
-  function handleStudentRegister() {
-    const name = document.getElementById('reg-name').value.trim();
-    const mobile = document.getElementById('reg-mobile').value.trim();
-    const pwd = document.getElementById('reg-password').value.trim();
-
-    if (!name || mobile.length !== 10 || pwd.length < 6) {
-      alert('Please fill all details correctly (10-digit mobile & 6+ chars password).');
-      return;
-    }
-
-    const newUser = {
-      id: 'STU-' + Date.now().toString().slice(-4),
-      fullName: name,
-      mobile: mobile,
-      password: pwd,
-      seat: '02',
-      shift: 'Shift 1'
-    };
-    db.users.push(newUser);
-    db.currentUser = newUser;
-    saveDb();
-    updateStudentUI();
-    showScreen('screen-home');
-  }
-
-  function handleForgotPasswordRequest() {
-    const mobile = document.getElementById('forgot-mobile').value.trim();
-    const newPwd = document.getElementById('forgot-new-pwd').value.trim();
-
-    if (mobile.length !== 10 || newPwd.length < 6) {
-      alert('Please enter valid mobile and new password.');
-      return;
-    }
-
-    // Add notification strictly for ADMIN only (No privacy leak)
-    db.notifications.push({
-      id: 'NOTIF-ADM-' + Date.now(),
-      targetId: 'ADMIN',
-      title: 'Password Reset Request',
-      desc: `Student (+91 ${mobile}) requested password reset.`,
-      timestamp: 'Just now'
-    });
-    saveDb();
-
-    alert('Password reset request securely submitted to Admin for approval!');
-    showScreen('screen-login');
-  }
-
-  // Admin Auth Handler
-  function handleAdminLogin() {
-    const key = document.getElementById('admin-key').value.trim();
-    if (key === 'MDDL@ADMIN2026' || key === 'ADMIN9569' || key.toLowerCase() === 'admin') {
-      showScreen('screen-admin-dash');
-    } else {
-      alert('Invalid Master Key. Please check the institutional desk key.');
-    }
-  }
-
-  function handleLogout() {
-    db.currentUser = null;
-    saveDb();
-    showScreen('screen-welcome');
-  }
-
-  // Update UI with Current User Details
-  function updateStudentUI() {
-    const u = db.currentUser;
-    if (!u) return;
-
-    document.getElementById('user-display-name').innerText = u.fullName;
-    document.getElementById('user-avatar').innerText = u.fullName.charAt(0).toUpperCase();
-    document.getElementById('hero-seat-label').innerText = 'Seat #' + (u.seat || '02');
-    document.getElementById('hero-shift-label').innerText = u.shift || 'Shift 1 (06:00 AM - 11:00 AM)';
-    
-    // ID Card
-    document.getElementById('id-card-name').innerText = u.fullName;
-    document.getElementById('id-card-roll').innerText = 'MDDL-2026-' + u.mobile.slice(-4);
-    document.getElementById('id-card-mobile').innerText = '+91 ' + u.mobile;
-    document.getElementById('id-card-seat').innerText = 'Seat #' + (u.seat || '02') + ' (' + (u.shift || 'Shift 1') + ')';
-
-    renderNotifications();
-  }
-
-  // 36 Seats Rendering
-  function renderSeats() {
-    const container = document.getElementById('seats-grid-layout');
-    if (!container) return;
-    container.innerHTML = '';
-
-    const shiftMap = db.seatsState[db.currentShift] || {};
-    let availCount = 0;
-
-    for (let i = 1; i <= 36; i++) {
-      const seatNum = i < 10 ? '0' + i : '' + i;
-      const isOccupied = shiftMap[seatNum] === 'OCCUPIED';
-      const isSelected = db.selectedSeat === seatNum;
-
-      if (!isOccupied) availCount++;
-
-      const box = document.createElement('div');
-      box.className = `seat-box ${isOccupied ? 'occupied' : 'available'} ${isSelected ? 'selected' : ''}`;
-      box.innerHTML = `<span>${seatNum}</span>`;
-
-      if (!isOccupied) {
-        box.onclick = () => {
-          db.selectedSeat = seatNum;
-          renderSeats();
-          const summary = document.getElementById('seat-booking-summary');
-          if (summary) summary.style.display = 'block';
-          document.getElementById('selected-seat-text').innerText = 'Seat #' + seatNum;
-        };
-      }
-
-      container.appendChild(box);
-    }
-
-    const pill = document.getElementById('available-count-pill');
-    if (pill) pill.innerText = `${availCount} Available`;
-  }
-
-  function selectShift(shiftNum, el) {
-    db.currentShift = shiftNum;
-    document.querySelectorAll('.shift-tab').forEach(t => t.classList.remove('active'));
-    if (el) el.classList.add('active');
-    renderSeats();
-  }
-
-  // Attendance Punch IN / OUT
-  function markAttendance(type) {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
-    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-    db.attendanceLog.unshift({ type, time: timeStr, date: dateStr });
-    saveDb();
-
-    // Render Log
-    const container = document.getElementById('attendance-log-container');
-    const row = document.createElement('div');
-    row.className = 'stat-card';
-    row.style.marginBottom = '8px';
-    row.style.display = 'flex';
-    row.style.justifyContent = 'space-between';
-    row.style.alignItems = 'center';
-    row.innerHTML = `
-      <div>
-        <div style="font-weight:700; font-size:14px;">${dateStr} - ${type === 'IN' ? 'Check-In' : 'Check-Out'}</div>
-        <div style="font-size:12px; color:var(--text-muted);">${timeStr}</div>
+  <!-- STUDENT MODAL -->
+  <div class="modal-overlay" id="student-modal">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:18px; font-weight:800;">Student Portal Login</h3>
+        <button onclick="closeModal('student-modal')" style="background:none; border:none; font-size:22px; cursor:pointer;">✕</button>
       </div>
-      <span class="pill ${type === 'IN' ? 'pill-green' : 'pill-red'}">${type === 'IN' ? 'CHECKED IN' : 'CHECKED OUT'}</span>
-    `;
-    container.prepend(row);
 
-    alert(`✅ Attendance successfully marked: PUNCH ${type} at ${timeStr}`);
-  }
+      <div style="margin-bottom:14px;">
+        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">10-Digit Mobile Number</label>
+        <input type="tel" id="stu-mobile" placeholder="e.g. 9569733445" style="width:100%; height:44px; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px;">
+      </div>
 
-  // Payment Modal
-  function openPaymentModal() {
-    const seatNum = db.selectedSeat || '02';
-    document.getElementById('modal-seat-num').innerText = 'Seat #' + seatNum;
-    document.getElementById('modal-shift-name').innerText = 'Shift ' + db.currentShift;
-    document.getElementById('payment-modal').classList.add('active');
-  }
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">Password</label>
+        <input type="password" id="stu-pwd" placeholder="Enter password" style="width:100%; height:44px; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px;">
+      </div>
 
-  function closePaymentModal() {
-    document.getElementById('payment-modal').classList.remove('active');
-  }
+      <button class="btn-primary" onclick="loginStudent()">Sign In to Desk ➔</button>
+    </div>
+  </div>
 
-  function submitPaymentProof() {
-    const utr = document.getElementById('modal-utr').value.trim();
-    if (utr.length < 6) {
-      alert('Please enter a valid 12-digit UPI UTR number.');
-      return;
+  <!-- ADMIN MODAL -->
+  <div class="modal-overlay" id="admin-modal">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:18px; font-weight:800;">Administrator Desk Access</h3>
+        <button onclick="closeModal('admin-modal')" style="background:none; border:none; font-size:22px; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">Master Security Key</label>
+        <input type="password" id="adm-key" placeholder="Enter master key (MDDL@ADMIN2026)" style="width:100%; height:44px; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px;">
+      </div>
+
+      <button class="btn-primary" style="background:#B45309;" onclick="loginAdmin()">Unlock Admin Desk ➔</button>
+    </div>
+  </div>
+
+  <footer>
+    <div style="font-weight:700; color:var(--primary-dark); font-size:15px; margin-bottom:4px;">MAA DURGA DIGITAL LIBRARY</div>
+    <div>Managed & Affiliated by <strong>Vivek & Prince</strong></div>
+    <div style="margin-top:8px;">36 Reserved AC Seats • 4 Shifts • High-Speed WiFi • In-Library Power Supply</div>
+  </footer>
+
+  <script>
+    let currentShift = 1;
+    let selectedSeat = '02';
+    const seatsData = {
+      1: { '01': 'OCCUPIED', '04': 'OCCUPIED', '12': 'OCCUPIED', '24': 'OCCUPIED', '30': 'OCCUPIED' },
+      2: { '02': 'OCCUPIED', '05': 'OCCUPIED', '15': 'OCCUPIED' },
+      3: { '07': 'OCCUPIED', '08': 'OCCUPIED' },
+      4: { '01': 'OCCUPIED', '18': 'OCCUPIED' }
+    };
+
+    function renderSeats() {
+      const container = document.getElementById('seats-container');
+      container.innerHTML = '';
+      const occupiedMap = seatsData[currentShift] || {};
+      let avail = 0;
+
+      for (let i = 1; i <= 36; i++) {
+        const seatNo = i < 10 ? '0' + i : '' + i;
+        const isOccupied = occupiedMap[seatNo] === 'OCCUPIED';
+        const isSelected = selectedSeat === seatNo;
+
+        if (!isOccupied) avail++;
+
+        const div = document.createElement('div');
+        div.className = `seat-cube ${isOccupied ? 'occupied' : 'available'} ${isSelected ? 'selected' : ''}`;
+        div.innerText = seatNo;
+
+        if (!isOccupied) {
+          div.onclick = () => {
+            selectedSeat = seatNo;
+            document.getElementById('selected-seat-title').innerText = 'Seat #' + seatNo;
+            renderSeats();
+          };
+        }
+        container.appendChild(div);
+      }
+
+      document.getElementById('avail-pill').innerText = avail + ' Available';
     }
 
-    // Add private student confirmation
-    const student = db.currentUser || { id: 'STU-DEMO', fullName: 'Student' };
-    db.notifications.push({
-      id: 'NOTIF-PAY-' + Date.now(),
-      targetId: student.id,
-      title: 'Payment Proof Submitted ⏳',
-      desc: `Your payment proof for Seat #${db.selectedSeat} has been received and locked for Admin verification.`,
-      timestamp: 'Just now'
-    });
-
-    // Add admin alert (targetId: 'ADMIN')
-    db.notifications.push({
-      id: 'NOTIF-ADM-PAY-' + Date.now(),
-      targetId: 'ADMIN',
-      title: 'New Payment Verification Request',
-      desc: `${student.fullName} submitted ₹400 for Seat #${db.selectedSeat} (UTR: ${utr}).`,
-      timestamp: 'Just now'
-    });
-
-    saveDb();
-    closePaymentModal();
-    alert('🎉 Payment proof submitted successfully! Your seat is locked pending Admin confirmation.');
-    showScreen('screen-home');
-  }
-
-  // Notifications (Strict user data isolation)
-  function renderNotifications() {
-    const list = document.getElementById('notifications-list');
-    if (!list) return;
-    list.innerHTML = '';
-
-    const currentUserId = db.currentUser ? db.currentUser.id : null;
-    // Show only notifications targeted to this user or global announcements
-    const userNotifs = db.notifications.filter(n => n.targetId === currentUserId || n.targetId === null);
-
-    if (userNotifs.length === 0) {
-      list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">No new notifications.</div>';
-      return;
+    function changeShift(num, el) {
+      currentShift = num;
+      document.querySelectorAll('.shift-box').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+      renderSeats();
     }
 
-    userNotifs.forEach(n => {
-      const item = document.createElement('div');
-      item.className = 'stat-card';
-      item.style.marginBottom = '10px';
-      item.innerHTML = `
-        <div style="font-weight:700; font-size:14px; color:var(--primary);">${n.title}</div>
-        <div style="font-size:13px; color:var(--text); margin:4px 0;">${n.desc}</div>
-        <div style="font-size:11px; color:var(--text-muted);">${n.timestamp}</div>
-      `;
-      list.appendChild(item);
-    });
-  }
-
-  function clearUserNotifications() {
-    alert('All notifications marked as read.');
-  }
-
-  // Admin Actions
-  function approvePaymentVerification(btn) {
-    btn.innerText = 'Approved ✓';
-    btn.style.background = '#15803D';
-    btn.disabled = true;
-    alert('Payment verified! Seat has been officially locked and allocated to the student.');
-  }
-
-  function publishAdminNotice() {
-    const input = document.getElementById('admin-notice-input');
-    const val = input.value.trim();
-    if (!val) return;
-
-    db.notifications.push({
-      id: 'NOTICE-' + Date.now(),
-      targetId: null, // Public announcement
-      title: 'Desk Announcement 📢',
-      desc: val,
-      timestamp: 'Just now'
-    });
-    saveDb();
-    input.value = '';
-    alert('Announcement broadcasted to all students successfully!');
-  }
-
-  function togglePasswordVisibility(id) {
-    const input = document.getElementById(id);
-    if (input) {
-      input.type = input.type === 'password' ? 'text' : 'password';
+    function updateLiveClock() {
+      const now = new Date();
+      document.getElementById('clock-display').innerText = now.toLocaleTimeString('en-US', { hour12: true });
+      document.getElementById('date-display').innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
     }
-  }
 
-  function checkPasswordStrength(val) {
-    const fill = document.getElementById('strength-fill');
-    if (!fill) return;
-    if (val.length === 0) fill.style.width = '0%';
-    else if (val.length < 6) { fill.style.width = '35%'; fill.style.background = '#DC2626'; }
-    else if (val.length < 9) { fill.style.width = '70%'; fill.style.background = '#EAB308'; }
-    else { fill.style.width = '100%'; fill.style.background = '#16A34A'; }
-  }
-</script>
+    function punchAttendance(type) {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
+      alert(`✅ Attendance Recorded: PUNCH ${type} at ${time}`);
+    }
+
+    function openPaymentModal() {
+      document.getElementById('modal-seat-label').innerText = 'Seat #' + selectedSeat;
+      document.getElementById('modal-shift-label').innerText = 'Shift ' + currentShift;
+      document.getElementById('pay-modal').classList.add('active');
+    }
+
+    function openStudentModal() {
+      document.getElementById('student-modal').classList.add('active');
+    }
+
+    function openAdminModal() {
+      document.getElementById('admin-modal').classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function submitPayment() {
+      const utr = document.getElementById('utr-input').value.trim();
+      if (utr.length < 6) {
+        alert('Please enter a valid 12-digit UPI UTR number.');
+        return;
+      }
+      closeModal('pay-modal');
+      alert(`🎉 Payment proof for Seat #${selectedSeat} submitted! The Admin desk will verify and lock your seat.`);
+    }
+
+    function loginStudent() {
+      const mobile = document.getElementById('stu-mobile').value.trim();
+      if (mobile.length !== 10) {
+        alert('Please enter a valid 10-digit mobile number.');
+        return;
+      }
+      document.getElementById('id-name').innerText = 'Student (' + mobile.slice(-4) + ')';
+      document.getElementById('id-seat').innerText = 'Seat #' + selectedSeat + ' (Shift ' + currentShift + ')';
+      closeModal('student-modal');
+      alert('Welcome! Student portal credentials authenticated.');
+    }
+
+    function loginAdmin() {
+      const key = document.getElementById('adm-key').value.trim();
+      if (key === 'MDDL@ADMIN2026' || key === 'ADMIN9569' || key.toLowerCase() === 'admin') {
+        closeModal('admin-modal');
+        alert('Admin Desk unlocked! Vivek & Prince Administrative privileges active.');
+      } else {
+        alert('Invalid Security Key.');
+      }
+    }
+
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderSeats();
+      updateLiveClock();
+      setInterval(updateLiveClock, 1000);
+    });
+  </script>
 </body>
 </html>
