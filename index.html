@@ -489,7 +489,7 @@
       </div>
     </div>
     <!-- Direct link to release APK in repo -->
-    <a href="https://github.com/vivekverma32445/digital-library-app/releases/latest" id="apkDownloadLink" class="btn-download" target="_blank">
+    <a href="./downloads/MaaDurgaLibrary.apk" download="MaaDurgaLibrary.apk" id="apkDownloadLink" class="btn-download">
       <span>⬇️</span> Download APK
     </a>
   </div>
@@ -697,7 +697,7 @@
           <p style="font-size:12px; color:#555; margin-bottom:12px;">
             Install the native Android app on your phone for offline QR access and daily notifications.
           </p>
-          <a href="https://github.com/vivekverma32445/digital-library-app/releases/latest" class="btn-primary" style="display:block; text-align:center; text-decoration:none;">Download APK Now</a>
+          <a href="./downloads/MaaDurgaLibrary.apk" download="MaaDurgaLibrary.apk" class="btn-primary" style="display:block; text-align:center; text-decoration:none;">Download APK Now</a>
         </div>
       </div>
     </div>
@@ -830,18 +830,8 @@
       showPayModal();
     }
 
-    // Auto adapt GitHub repo download link from window URL
     window.addEventListener('DOMContentLoaded', () => {
       renderSeats();
-      const currentHost = window.location.hostname;
-      const currentPath = window.location.pathname.split('/')[1];
-      if (currentHost.includes('github.io') && currentPath) {
-        const username = currentHost.split('.')[0];
-        const repo = currentPath;
-        const releaseUrl = `https://github.com/${username}/${repo}/releases/latest`;
-        const link = document.getElementById('apkDownloadLink');
-        if (link) link.href = releaseUrl;
-      }
     });
   </script>
 </body>
