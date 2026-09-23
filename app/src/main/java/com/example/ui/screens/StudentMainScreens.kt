@@ -16,8 +16,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,6 +47,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
+import com.example.util.AppImageViewer
+import com.example.util.ImageUtils
 import com.example.data.model.SeatAvailabilityState
 import com.example.data.model.SeatVisualItem
 import com.example.ui.MainViewModel
@@ -70,7 +74,9 @@ fun StudentHomeScreen(
     var localDismissedInSession by remember { mutableStateOf<Set<String>>(emptySet()) }
     val unreadPopupAnnouncement = remember(announcements, dismissedAnnouncements, localDismissedInSession) {
         announcements.firstOrNull { ann ->
-            !dismissedAnnouncements.contains(ann.id) && !localDismissedInSession.contains(ann.id)
+            !dismissedAnnouncements.contains(ann.id) &&
+            !localDismissedInSession.contains(ann.id) &&
+            !viewModel.isAnnouncementDismissed(ann.id)
         }
     }
     val studentAttendance by viewModel.studentAttendance.collectAsState()
@@ -81,6 +87,19 @@ fun StudentHomeScreen(
     val isExpired = membership?.isExpired == true || (membership != null && daysRemaining <= 0)
     val hasValidMembership = membership != null && !isExpired
     var showNoMembershipDialog by remember { mutableStateOf(false) }
+
+    // 10-Day Daily Membership Expiry Reminder
+    var showDailyExpiryReminderDialog by remember { mutableStateOf(false) }
+    var dismissedReminderInSession by remember { mutableStateOf(false) }
+
+    LaunchedEffect(currentUser?.id, membership, daysRemaining) {
+        val studentId = currentUser?.id
+        if (studentId != null && hasValidMembership && daysRemaining in 1..10 && !dismissedReminderInSession) {
+            if (viewModel.shouldShowDailyExpiryReminder(studentId, daysRemaining)) {
+                showDailyExpiryReminderDialog = true
+            }
+        }
+    }
 
     val studentVerificationRequests by viewModel.studentPaymentVerificationRequests.collectAsState()
     val pendingVerification = remember(studentVerificationRequests) {
@@ -510,12 +529,14 @@ fun StudentHomeScreen(
                         Text(
                             text = when {
                                 membership != null && !isExpired -> "ACTIVE"
-                                pendingVerification != null -> "PENDING VERIFICATION"
+                                pendingVerification != null -> "PENDING"
                                 isExpired -> "EXPIRED"
                                 else -> "INACTIVE"
                             },
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
                             color = when {
                                 membership != null && !isExpired -> Color.Black
                                 pendingVerification != null -> Color(0xFFE65100)
@@ -575,9 +596,9 @@ fun StudentHomeScreen(
                     Spacer(Modifier.height(8.dp))
 
                     Text(
-                        text = "Expires on ${mem.expiryDate} • Auto-expires at 0 days (seat becomes vacant)",
+                        text = "Expires on ${mem.expiryDate} • Auto-expires on ${mem.expiryDate}",
                         fontSize = 10.5.sp,
-                        color = Color.White.copy(alpha = 0.75f)
+                        color = Color.White.copy(alpha = 0.85f)
                     )
                 } else if (pendingVerification != null) {
                     Text(
@@ -701,6 +722,8 @@ fun StudentHomeScreen(
                                 text = attendanceStatus,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
                                 color = attendanceStatusColor,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                             )
@@ -949,10 +972,136 @@ fun StudentHomeScreen(
                             viewModel.dismissAnnouncement(ann.id)
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(46.dp)
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Remove / Continue to App", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                    }
+                }
+            )
+        }
+
+        // Daily Membership Expiry Reminder Dialog (10 days before expiry)
+        if (showDailyExpiryReminderDialog && membership != null && currentUser != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    dismissedReminderInSession = true
+                    showDailyExpiryReminderDialog = false
+                    viewModel.dismissDailyExpiryReminder(currentUser!!.id)
+                },
+                icon = {
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFFF3E0)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.HourglassBottom,
+                            contentDescription = null,
+                            tint = Color(0xFFE65100),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                },
+                title = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFFFF3E0)
+                        ) {
+                            Text(
+                                text = "MEMBERSHIP EXPIRY REMINDER",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFE65100),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = "Aapki Membership Expire Hone Wali Hai",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Namaste ${currentUser!!.fullName},",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.5.sp
+                        )
+                        Text(
+                            text = "Aapki library seat (${membership!!.seatNumber}) ki membership agle $daysRemaining dino me (${membership!!.expiryDate}) expire hone wali hai.",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color(0xFFFFF8E1),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD54F)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Schedule, contentDescription = null, tint = Color(0xFFF57F17), modifier = Modifier.size(20.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "Valid Till: ${membership!!.expiryDate} ($daysRemaining days left)",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFE65100)
+                                )
+                            }
+                        }
+                        Text(
+                            text = "Kripya samay par renew karein taaki aapki seat confirm rahe aur library me padhai uninterrupted chalti rahe.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            dismissedReminderInSession = true
+                            showDailyExpiryReminderDialog = false
+                            viewModel.dismissDailyExpiryReminder(currentUser!!.id)
+                            onNavigateToSeatSelection()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth().height(46.dp)
+                    ) {
+                        Icon(Icons.Default.AddCard, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Renew Membership Now", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            dismissedReminderInSession = true
+                            showDailyExpiryReminderDialog = false
+                            viewModel.dismissDailyExpiryReminder(currentUser!!.id)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Understood / Got It", fontWeight = FontWeight.Bold)
+                        Text("Remind Me Tomorrow", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             )
@@ -1237,16 +1386,31 @@ fun SeatSelectionScreen(
     val selectedSeat by viewModel.selectedSeatNumber.collectAsState()
     val seats by viewModel.seats.collectAsState()
     val allocations by viewModel.repository.getAllocationsForShift(selectedShift).collectAsState(emptyList())
+    val currentUser by viewModel.currentUser.collectAsState()
     val activeMembership by viewModel.activeMembership.collectAsState()
-    val activeMem = activeMembership
-    val hasActiveMembership = activeMem != null && !activeMem.isExpired
-    val activeSeatNum = activeMem?.seatNumber
-    val activeShiftTitles = activeMem?.shiftTitles ?: ""
 
-    // If user already holds an active seat, lock their selected seat to their existing seat
-    LaunchedEffect(activeSeatNum, hasActiveMembership) {
-        if (hasActiveMembership && activeSeatNum != null) {
-            viewModel.selectedSeatNumber.value = activeSeatNum
+    // Check if current user has a confirmed seat in THIS specific shift
+    val myAllocInThisShift = allocations.find { it.studentId == currentUser?.id && it.status == "CONFIRMED" }
+    val hasBookedSeatInThisShift = myAllocInThisShift != null
+    val mySeatInThisShift = myAllocInThisShift?.seatNumber
+
+    // If user has a seat in this shift, select it automatically.
+    // If not, ensure an available seat is selected for the new shift so student can easily book a different seat.
+    LaunchedEffect(selectedShift, allocations, currentUser, seats) {
+        val myAlloc = allocations.find { it.studentId == currentUser?.id && it.status == "CONFIRMED" }
+        if (myAlloc != null) {
+            viewModel.selectedSeatNumber.value = myAlloc.seatNumber
+        } else {
+            val occupiedSet = allocations.map { it.seatNumber }.toSet()
+            val current = viewModel.selectedSeatNumber.value
+            val currentSeatObj = seats.find { it.seatNumber == current }
+            val isCurrentValid = current.isNotBlank() && currentSeatObj != null && !currentSeatObj.isMaintenance && !occupiedSet.contains(current)
+            if (!isCurrentValid) {
+                val firstAvail = seats.firstOrNull { s -> !s.isMaintenance && !occupiedSet.contains(s.seatNumber) }
+                if (firstAvail != null) {
+                    viewModel.selectedSeatNumber.value = firstAvail.seatNumber
+                }
+            }
         }
     }
 
@@ -1295,8 +1459,8 @@ fun SeatSelectionScreen(
     }
 
     // Check if currently selected seat is valid/available
-    val isCurrentSeatAvailable = remember(selectedSeat, occupiedSeatsSet, reservedSeatsSet, seats, hasActiveMembership, activeSeatNum) {
-        if (hasActiveMembership && selectedSeat == activeSeatNum) {
+    val isCurrentSeatAvailable = remember(selectedSeat, occupiedSeatsSet, reservedSeatsSet, seats, hasBookedSeatInThisShift, mySeatInThisShift) {
+        if (hasBookedSeatInThisShift && selectedSeat == mySeatInThisShift) {
             true
         } else {
             val seatObj = seats.find { it.seatNumber == selectedSeat }
@@ -1304,304 +1468,369 @@ fun SeatSelectionScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
-    ) {
-        // Top Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            Spacer(Modifier.width(6.dp))
-            Column {
-                Text(
-                    text = "Available Seats",
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "Choose your preferred seat and shift based on availability.",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Spacer(Modifier.height(10.dp))
-
-        // Helpful Admission / Active Seat Policy Card
-        if (hasActiveMembership) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFE8F8EE)
-                ),
-                border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGreen.copy(alpha = 0.4f))
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            // Pinned Bottom Bar with Clear CTA: "Apply for Admission" / "Extend Seat"
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 8.dp,
+                shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(PrimaryGreen.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.VerifiedUser,
-                            contentDescription = null,
-                            tint = PrimaryGreen,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    Spacer(Modifier.width(10.dp))
-
                     Column {
                         Text(
-                            text = "Active Seat: Seat $activeSeatNum ($activeShiftTitles)",
-                            fontSize = 12.5.sp,
-                            color = PrimaryGreen,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Library policy ke hisab se ek user sirf ek hi seat use kar sakta hai. Aap doosri seat tabhi book kar sakte hain jab purani expire ho jaye. Yahan se aap apni Seat $activeSeatNum ko aage extend kar sakte hain.",
+                            text = if (hasBookedSeatInThisShift) "Your Booked Seat (Shift $selectedShift)" else "Selected Seat (Shift $selectedShift)",
                             fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 15.sp
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Seat $selectedSeat",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (hasBookedSeatInThisShift || isCurrentSeatAvailable) PrimaryGreen else Color(0xFFC62828)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (hasBookedSeatInThisShift || isCurrentSeatAvailable) Color(0xFFE8F8EE) else Color(0xFFFFEBEE)
+                            ) {
+                                Text(
+                                    text = if (hasBookedSeatInThisShift) "Active Seat" else if (isCurrentSeatAvailable) "Available" else "Unavailable",
+                                    fontSize = 9.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (hasBookedSeatInThisShift || isCurrentSeatAvailable) PrimaryGreen else Color(0xFFC62828),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                        if (hasBookedSeatInThisShift && activeMembership != null) {
+                            Text(
+                                text = "Current validity: till ${activeMembership?.expiryDate}",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
-                }
-            }
-        } else {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF4FAF5)
-                ),
-                border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGreen.copy(alpha = 0.25f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(PrimaryGreen.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
+
+                    Button(
+                        onClick = {
+                            viewModel.selectSeatAndShiftForAdmission(selectedSeat, selectedShift)
+                            onContinue()
+                        },
+                        enabled = if (hasBookedSeatInThisShift) true else isCurrentSeatAvailable,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PrimaryGreen,
+                            disabledContainerColor = PrimaryGreen.copy(alpha = 0.4f)
+                        ),
+                        modifier = Modifier.height(46.dp)
                     ) {
+                        Text(
+                            text = if (hasBookedSeatInThisShift) "Extend Seat $mySeatInThisShift" else "Apply for Admission",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        Spacer(Modifier.width(6.dp))
                         Icon(
-                            imageVector = Icons.Default.School,
+                            imageVector = Icons.Default.ChevronRight,
                             contentDescription = null,
-                            tint = PrimaryGreen,
                             modifier = Modifier.size(18.dp)
                         )
                     }
-
-                    Spacer(Modifier.width(10.dp))
-
-                    Text(
-                        text = "You can take admission from here by selecting an available seat and your preferred shift.",
-                        fontSize = 12.sp,
-                        color = PrimaryGreen,
-                        fontWeight = FontWeight.Medium,
-                        lineHeight = 16.sp
-                    )
                 }
             }
         }
-
-        Spacer(Modifier.height(12.dp))
-
-        // Shift selector (Clearly labeled shifts)
-        Text(
-            text = "Select Shift ($availableCount seats open)",
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) { paddingValues ->
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val chunkedShifts = shiftOptions.chunked(2)
-            chunkedShifts.forEach { rowShifts ->
+            // Top Header
+            item(span = { GridItemSpan(4) }) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    rowShifts.forEach { (shiftId, shiftName, shiftTiming) ->
-                        val isSelected = shiftId == selectedShift
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.surfaceVariant)
-                                .clickable {
-                                    viewModel.selectedShiftForMap.value = shiftId
-                                    unavailableNoticeMessage = null
-                                }
-                                .padding(vertical = 8.dp, horizontal = 6.dp),
-                            contentAlignment = Alignment.Center
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Spacer(Modifier.width(6.dp))
+                    Column {
+                        Text(
+                            text = "Available Seats",
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Choose your preferred seat and shift based on availability.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            // Helpful Admission / Active Seat Policy Card
+            item(span = { GridItemSpan(4) }) {
+                if (hasBookedSeatInThisShift) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F8EE)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGreen.copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(PrimaryGreen.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.VerifiedUser,
+                                    contentDescription = null,
+                                    tint = PrimaryGreen,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            Column {
                                 Text(
-                                    text = shiftName,
+                                    text = "Your Booked Seat: Seat $mySeatInThisShift (Shift $selectedShift)",
+                                    fontSize = 12.5.sp,
+                                    color = PrimaryGreen,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Shift $selectedShift me aapke paas Seat $mySeatInThisShift confirmed hai. Yahan se aap apni Seat $mySeatInThisShift ko aage extend kar sakte hain. Dusri shift ke liye aap doosra shift select karke nayi seat book kar sakte hain.",
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 15.sp
                                 )
-                                Text(
-                                    text = shiftTiming,
-                                    fontSize = 9.sp,
-                                    color = if (isSelected) Color.White.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        }
+                    }
+                } else {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF4FAF5)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGreen.copy(alpha = 0.25f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(PrimaryGreen.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.School,
+                                    contentDescription = null,
+                                    tint = PrimaryGreen,
+                                    modifier = Modifier.size(18.dp)
                                 )
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                text = "You can take admission from here by selecting an available seat and your preferred shift.",
+                                fontSize = 12.sp,
+                                color = PrimaryGreen,
+                                fontWeight = FontWeight.Medium,
+                                lineHeight = 16.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Shift Selector (All 4 Shifts clearly visible)
+            item(span = { GridItemSpan(4) }) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Select Shift ($availableCount seats open)",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    val chunkedShifts = shiftOptions.chunked(2)
+                    chunkedShifts.forEach { rowShifts ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            rowShifts.forEach { (shiftId, shiftName, shiftTiming) ->
+                                val isSelected = shiftId == selectedShift
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.surfaceVariant)
+                                        .clickable {
+                                            viewModel.selectedShiftForMap.value = shiftId
+                                            unavailableNoticeMessage = null
+                                        }
+                                        .padding(vertical = 8.dp, horizontal = 6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = shiftName,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = shiftTiming,
+                                            fontSize = 9.sp,
+                                            color = if (isSelected) Color.White.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        Spacer(Modifier.height(12.dp))
-
-        // Search and Filter row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = seatSearchQuery,
-                onValueChange = { seatSearchQuery = it },
-                placeholder = { Text("Search seat (e.g. 05)", fontSize = 12.sp) },
-                singleLine = true,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp),
-                textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+            // Search Bar
+            item(span = { GridItemSpan(4) }) {
+                OutlinedTextField(
+                    value = seatSearchQuery,
+                    onValueChange = { seatSearchQuery = it },
+                    placeholder = { Text("Search seat (e.g. 05)", fontSize = 12.sp) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryGreen,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                     )
-                },
-                shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PrimaryGreen,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                )
-            )
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        // Filter chips: All, Available, Occupied, Reserved
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            listOf("ALL" to "All Seats", "AVAILABLE" to "Available", "OCCUPIED" to "Occupied", "RESERVED" to "Reserved").forEach { (code, title) ->
-                val isSelected = statusFilter == code
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { statusFilter = code },
-                    label = { Text(title, fontSize = 11.sp) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = PrimaryGreen.copy(alpha = 0.15f),
-                        selectedLabelColor = PrimaryGreen
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        borderColor = if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                        enabled = true,
-                        selected = isSelected
-                    ),
-                    modifier = Modifier.height(32.dp)
                 )
             }
-        }
 
-        Spacer(Modifier.height(8.dp))
-
-        // Legend row with Available, Occupied, Reserved, Selected, Maintenance
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            LegendIndicator(color = SeatAvailableBorder, label = "Available")
-            LegendIndicator(color = SeatOccupiedBorder, label = "Occupied")
-            LegendIndicator(color = SeatReservedBorder, label = "Reserved")
-            LegendIndicator(color = PrimaryGreen, label = "Selected")
-            LegendIndicator(color = SeatMaintenanceBorder, label = "Maint.")
-        }
-
-        // Inline alert when user taps unavailable seat
-        unavailableNoticeMessage?.let { notice ->
-            Spacer(Modifier.height(8.dp))
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = Color(0xFFFFEBEE),
-                border = androidx.compose.foundation.BorderStroke(0.8.dp, Color(0xFFEF5350).copy(alpha = 0.4f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            // Filter Chips (Scrollable row so no text wraps or overflows)
+            item(span = { GridItemSpan(4) }) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = Color(0xFFC62828),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        text = notice,
-                        fontSize = 11.sp,
-                        color = Color(0xFFC62828),
-                        fontWeight = FontWeight.Medium
-                    )
+                    listOf("ALL" to "All Seats", "AVAILABLE" to "Available", "OCCUPIED" to "Occupied", "RESERVED" to "Reserved").forEach { (code, title) ->
+                        val isSelected = statusFilter == code
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { statusFilter = code },
+                            label = { Text(title, fontSize = 11.sp, maxLines = 1, softWrap = false) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = PrimaryGreen.copy(alpha = 0.15f),
+                                selectedLabelColor = PrimaryGreen
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                borderColor = if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                enabled = true,
+                                selected = isSelected
+                            ),
+                            modifier = Modifier.height(32.dp)
+                        )
+                    }
                 }
             }
-        }
 
-        Spacer(Modifier.height(10.dp))
+            // Legend Row
+            item(span = { GridItemSpan(4) }) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LegendIndicator(color = SeatAvailableBorder, label = "Available")
+                    LegendIndicator(color = SeatOccupiedBorder, label = "Occupied")
+                    LegendIndicator(color = SeatReservedBorder, label = "Reserved")
+                    LegendIndicator(color = PrimaryGreen, label = "Selected")
+                    LegendIndicator(color = SeatMaintenanceBorder, label = "Maint.")
+                }
+            }
 
-        // Seats Grid (4 columns)
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
-            modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(bottom = 8.dp)
-        ) {
+            // Inline alert when user taps unavailable seat
+            unavailableNoticeMessage?.let { notice ->
+                item(span = { GridItemSpan(4) }) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFFFEBEE),
+                        border = androidx.compose.foundation.BorderStroke(0.8.dp, Color(0xFFEF5350).copy(alpha = 0.4f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = Color(0xFFC62828),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = notice,
+                                fontSize = 11.sp,
+                                color = Color(0xFFC62828),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Seat Grid Items
             items(filteredSeats) { seat ->
-                val isMyActiveSeat = hasActiveMembership && seat.seatNumber == activeSeatNum
-                val isOccupied = !isMyActiveSeat && occupiedSeatsSet.contains(seat.seatNumber)
+                val isMySeatInThisShift = hasBookedSeatInThisShift && seat.seatNumber == mySeatInThisShift
+                val isOccupied = !isMySeatInThisShift && occupiedSeatsSet.contains(seat.seatNumber)
                 val isReserved = reservedSeatsSet.contains(seat.seatNumber)
-                val isSelected = seat.seatNumber == selectedSeat || isMyActiveSeat
+                val isSelected = seat.seatNumber == selectedSeat || isMySeatInThisShift
                 val isMaintenance = seat.isMaintenance
 
                 val state = when {
@@ -1616,11 +1845,11 @@ fun SeatSelectionScreen(
                     seatNumber = seat.seatNumber,
                     state = state,
                     onClick = {
-                        if (hasActiveMembership) {
-                            if (seat.seatNumber != activeSeatNum) {
-                                unavailableNoticeMessage = "Aapke paas pehle se Seat $activeSeatNum booked hai ($activeShiftTitles). Library rule ke mutabiq ek user sirf ek hi seat use kar sakta hai. Jab tak purani membership expire na ho, aap doosri seat book nahi kar sakte. Aap sirf apni seat ($activeSeatNum) ko aage extend kar sakte hain."
+                        if (hasBookedSeatInThisShift) {
+                            if (seat.seatNumber != mySeatInThisShift) {
+                                unavailableNoticeMessage = "Shift $selectedShift me aapke paas pehle se Seat $mySeatInThisShift booked hai. Iss shift me aap doosri seat book nahi kar sakte (sirf apni Seat $mySeatInThisShift ko extend kar sakte hain). Nayi seat lene ke liye doosri shift (jaise Shift 2, 3 ya 4) select karein."
                             } else {
-                                viewModel.selectedSeatNumber.value = activeSeatNum
+                                viewModel.selectedSeatNumber.value = mySeatInThisShift
                                 unavailableNoticeMessage = null
                             }
                             return@SeatGridBox
@@ -1632,7 +1861,7 @@ fun SeatSelectionScreen(
                                 unavailableNoticeMessage = null
                             }
                             SeatAvailabilityState.OCCUPIED -> {
-                                unavailableNoticeMessage = "Seat ${seat.seatNumber} is occupied for this shift. Please choose an available green seat."
+                                unavailableNoticeMessage = "Seat ${seat.seatNumber} is occupied for Shift $selectedShift. Please choose an available green seat."
                             }
                             SeatAvailabilityState.RESERVED -> {
                                 unavailableNoticeMessage = "Seat ${seat.seatNumber} is reserved. Please pick an available seat to take admission."
@@ -1643,86 +1872,6 @@ fun SeatSelectionScreen(
                         }
                     }
                 )
-            }
-        }
-
-        Spacer(Modifier.height(6.dp))
-
-        // Bottom Bar with Clear CTA: "Take Admission" / "Extend Seat"
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = if (hasActiveMembership) "Your Active Booked Seat" else "Selected Seat",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Seat $selectedSeat",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (hasActiveMembership || isCurrentSeatAvailable) PrimaryGreen else Color(0xFFC62828)
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (hasActiveMembership || isCurrentSeatAvailable) Color(0xFFE8F8EE) else Color(0xFFFFEBEE)
-                        ) {
-                            Text(
-                                text = if (hasActiveMembership) "Active Seat" else if (isCurrentSeatAvailable) "Available" else "Unavailable",
-                                fontSize = 9.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (hasActiveMembership || isCurrentSeatAvailable) PrimaryGreen else Color(0xFFC62828),
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                    if (hasActiveMembership) {
-                        Text(
-                            text = "Current validity: till ${activeMembership?.expiryDate}",
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Button(
-                    onClick = {
-                        viewModel.selectSeatAndShiftForAdmission(selectedSeat, selectedShift)
-                        onContinue()
-                    },
-                    enabled = if (hasActiveMembership) true else isCurrentSeatAvailable,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryGreen,
-                        disabledContainerColor = PrimaryGreen.copy(alpha = 0.4f)
-                    ),
-                    modifier = Modifier.height(46.dp)
-                ) {
-                    Text(
-                        text = if (hasActiveMembership) "Extend Seat $activeSeatNum" else "Apply for Admission",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
             }
         }
     }
@@ -2173,7 +2322,8 @@ fun PaymentScreen(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            viewModel.setManualPaymentProofUri(uri.toString())
+            val base64 = ImageUtils.uriToBase64(context, uri) ?: uri.toString()
+            viewModel.setManualPaymentProofUri(base64)
         }
     }
 
@@ -2619,7 +2769,7 @@ fun PaymentScreen(
                             .background(Color(0xFFF1F8E9)),
                         contentAlignment = Alignment.Center
                     ) {
-                        AsyncImage(
+                        AppImageViewer(
                             model = manualProofUri,
                             contentDescription = "Payment Screenshot",
                             modifier = Modifier.fillMaxSize(),

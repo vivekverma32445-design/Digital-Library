@@ -20,7 +20,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -39,13 +41,49 @@ import com.example.ui.components.PasswordStrengthIndicator
 import com.example.ui.theme.*
 import com.example.util.PasswordSecurity
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun SplashScreen(
     onTimeout: () -> Unit
 ) {
+    val logoScale = remember { androidx.compose.animation.core.Animatable(0.6f) }
+    val logoAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    val contentAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    val developerAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
+
     LaunchedEffect(Unit) {
-        delay(1600)
+        launch {
+            logoScale.animateTo(
+                targetValue = 1f,
+                animationSpec = androidx.compose.animation.core.tween(
+                    durationMillis = 800,
+                    easing = androidx.compose.animation.core.FastOutSlowInEasing
+                )
+            )
+        }
+        launch {
+            logoAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 700)
+            )
+        }
+        delay(300)
+        launch {
+            contentAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
+            )
+        }
+        delay(300)
+        launch {
+            developerAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 600)
+            )
+        }
+        // Display for 2.6 seconds total (2-3 seconds as requested)
+        delay(1800)
         onTimeout()
     }
 
@@ -56,50 +94,119 @@ fun SplashScreen(
         contentAlignment = Alignment.Center
     ) {
         Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Logo Image
-            Image(
-                painter = painterResource(id = R.drawable.ic_digital_library_logo),
-                contentDescription = "Digital Library Logo",
-                modifier = Modifier
-                    .size(110.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, EmeraldAccent, CircleShape),
-                contentScale = ContentScale.Crop
-            )
-
             Spacer(Modifier.height(20.dp))
 
-            Text(
-                text = "Digital Library",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            // Center: Animated Logo and App Name
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .scale(logoScale.value)
+                    .alpha(logoAlpha.value)
+            ) {
+                // Logo Container with soft glow
+                Box(
+                    modifier = Modifier
+                        .size(124.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryGreen.copy(alpha = 0.12f))
+                        .padding(5.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_digital_library_logo),
+                        contentDescription = "Digital Library Logo",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                            .border(2.5.dp, EmeraldAccent, CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
 
-            Text(
-                text = "Maa Durga Digital Library",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = PrimaryGreen,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+                Spacer(Modifier.height(20.dp))
 
-            Text(
-                text = "Your Space. Your Focus.",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 6.dp)
-            )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.alpha(contentAlpha.value)
+                ) {
+                    Text(
+                        text = "Digital Library",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        letterSpacing = 0.5.sp
+                    )
 
-            Spacer(Modifier.height(40.dp))
-            CircularProgressIndicator(
-                modifier = Modifier.size(28.dp),
-                color = PrimaryGreen,
-                strokeWidth = 2.5.dp
-            )
+                    Text(
+                        text = "Maa Durga Digital Library",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PrimaryGreen,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+
+                    Text(
+                        text = "Your Space. Your Focus.",
+                        fontSize = 12.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
+
+                    Spacer(Modifier.height(30.dp))
+
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(28.dp),
+                        color = PrimaryGreen,
+                        strokeWidth = 2.5.dp
+                    )
+                }
+            }
+
+            // Bottom: Developer Credit ("Created by Vivek & Prince")
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .padding(bottom = 20.dp)
+                    .alpha(developerAlpha.value)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f),
+                    border = BorderStroke(1.dp, PrimaryGreen.copy(alpha = 0.4f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Code,
+                            contentDescription = null,
+                            tint = PrimaryGreen,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Created by Vivek & Prince",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Lead App Developers",
+                    fontSize = 10.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                )
+            }
         }
     }
 }
@@ -615,6 +722,33 @@ fun WelcomeScreen(
                 fontSize = 11.sp,
                 color = CharcoalMuted.copy(alpha = 0.8f)
             )
+
+            Spacer(Modifier.height(14.dp))
+
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = PrimaryGreen.copy(alpha = 0.08f),
+                border = BorderStroke(1.dp, PrimaryGreen.copy(alpha = 0.25f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Code,
+                        contentDescription = null,
+                        tint = PrimaryGreen,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "Developed by Vivek & Prince",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryGreen
+                    )
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 

@@ -58,6 +58,9 @@ interface ShiftDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertShifts(shifts: List<Shift>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertShift(shift: Shift)
+
     @Update
     suspend fun updateShift(shift: Shift)
 }
@@ -91,6 +94,9 @@ interface SeatAllocationDao {
     @Query("SELECT * FROM seat_allocations")
     fun getAllAllocations(): Flow<List<SeatAllocation>>
 
+    @Query("SELECT * FROM seat_allocations")
+    suspend fun getAllAllocationsSync(): List<SeatAllocation>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllocation(allocation: SeatAllocation)
 
@@ -108,6 +114,15 @@ interface SeatAllocationDao {
 
     @Query("DELETE FROM seat_allocations WHERE seatNumber = :seatNumber AND shiftId = :shiftId AND status = 'PENDING'")
     suspend fun deletePendingAllocationForSeat(seatNumber: String, shiftId: Int)
+
+    @Query("SELECT * FROM seat_allocations WHERE studentId = :studentId AND shiftId = :shiftId AND status = 'CONFIRMED' LIMIT 1")
+    suspend fun getConfirmedAllocationForStudentAndShift(studentId: String, shiftId: Int): SeatAllocation?
+
+    @Query("SELECT * FROM seat_allocations WHERE studentId = :studentId AND status = 'CONFIRMED'")
+    fun getConfirmedAllocationsForStudentFlow(studentId: String): Flow<List<SeatAllocation>>
+
+    @Query("SELECT * FROM seat_allocations WHERE studentId = :studentId AND status = 'CONFIRMED'")
+    suspend fun getConfirmedAllocationsForStudentSync(studentId: String): List<SeatAllocation>
 }
 
 @Dao
@@ -117,6 +132,12 @@ interface MembershipDao {
 
     @Query("SELECT * FROM memberships WHERE studentId = :studentId ORDER BY id DESC LIMIT 1")
     suspend fun getActiveMembershipSync(studentId: String): Membership?
+
+    @Query("SELECT * FROM memberships WHERE studentId = :studentId AND status = 'ACTIVE' ORDER BY id DESC")
+    fun getAllActiveMembershipsForStudent(studentId: String): Flow<List<Membership>>
+
+    @Query("SELECT * FROM memberships WHERE studentId = :studentId AND status = 'ACTIVE' ORDER BY id DESC")
+    suspend fun getAllActiveMembershipsForStudentSync(studentId: String): List<Membership>
 
     @Query("SELECT * FROM memberships ORDER BY id DESC")
     fun getAllMemberships(): Flow<List<Membership>>
@@ -198,6 +219,12 @@ interface PaymentDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPayment(payment: PaymentRecord)
+
+    @Query("DELETE FROM payments WHERE id = :paymentId")
+    suspend fun deletePaymentById(paymentId: String)
+
+    @Query("DELETE FROM payments")
+    suspend fun deleteAllPayments()
 }
 
 @Dao
@@ -220,6 +247,9 @@ interface AnnouncementDao {
     @Query("SELECT * FROM announcements ORDER BY createdAtMillis DESC, id DESC")
     fun getAllAnnouncements(): Flow<List<Announcement>>
 
+    @Query("SELECT * FROM announcements ORDER BY createdAtMillis DESC, id DESC")
+    suspend fun getAllAnnouncementsSync(): List<Announcement>
+
     @Query("SELECT * FROM announcements WHERE expiryDateMillis IS NULL OR expiryDateMillis >= :nowMillis ORDER BY createdAtMillis DESC, id DESC")
     fun getActiveAnnouncements(nowMillis: Long): Flow<List<Announcement>>
 
@@ -238,11 +268,17 @@ interface NotificationDao {
     @Query("SELECT * FROM notifications ORDER BY createdAtMillis DESC")
     fun getAllNotifications(): Flow<List<NotificationItem>>
 
-    @Query("SELECT * FROM notifications WHERE targetStudentId IS NULL OR targetStudentId = :studentId ORDER BY createdAtMillis DESC")
+    @Query("SELECT * FROM notifications WHERE targetStudentId = :studentId OR (targetStudentId IS NULL AND type = 'ANNOUNCEMENT') ORDER BY createdAtMillis DESC")
     fun getNotificationsForStudent(studentId: String): Flow<List<NotificationItem>>
 
-    @Query("SELECT COUNT(*) FROM notifications WHERE (targetStudentId IS NULL OR targetStudentId = :studentId) AND isRead = 0")
+    @Query("SELECT COUNT(*) FROM notifications WHERE (targetStudentId = :studentId OR (targetStudentId IS NULL AND type = 'ANNOUNCEMENT')) AND isRead = 0")
     fun getUnreadCount(studentId: String): Flow<Int>
+
+    @Query("SELECT * FROM notifications WHERE targetStudentId = 'ADMIN' OR type = 'ANNOUNCEMENT' ORDER BY createdAtMillis DESC")
+    fun getNotificationsForAdmin(): Flow<List<NotificationItem>>
+
+    @Query("SELECT COUNT(*) FROM notifications WHERE targetStudentId = 'ADMIN' AND isRead = 0")
+    fun getAdminUnreadCount(): Flow<Int>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNotification(notification: NotificationItem)
@@ -250,8 +286,14 @@ interface NotificationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNotifications(notifications: List<NotificationItem>)
 
-    @Query("UPDATE notifications SET isRead = 1 WHERE targetStudentId IS NULL OR targetStudentId = :studentId")
+    @Query("UPDATE notifications SET isRead = 1 WHERE targetStudentId = :studentId OR (targetStudentId IS NULL AND type = 'ANNOUNCEMENT')")
     suspend fun markAllAsRead(studentId: String)
+
+    @Query("UPDATE notifications SET isRead = 1 WHERE targetStudentId = 'ADMIN'")
+    suspend fun markAllAdminAsRead()
+
+    @Query("UPDATE notifications SET targetStudentId = 'ADMIN' WHERE (targetStudentId IS NULL OR targetStudentId != 'ADMIN') AND (id LIKE 'NOTIF-ADM-%' OR title LIKE '%Password Change%' OR title LIKE '%Password Reset%' OR title LIKE '%Payment Verification Request%')")
+    suspend fun sanitizeAdminNotifications()
 
     @Query("UPDATE notifications SET isRead = 1 WHERE id = :id")
     suspend fun markAsRead(id: String)
@@ -296,6 +338,9 @@ interface PasswordResetRequestDao {
     @Query("SELECT * FROM password_reset_requests ORDER BY requestTimestamp DESC")
     fun getAllRequestsFlow(): Flow<List<PasswordResetRequest>>
 
+    @Query("SELECT * FROM password_reset_requests")
+    suspend fun getAllRequestsSync(): List<PasswordResetRequest>
+
     @Query("SELECT * FROM password_reset_requests WHERE status = 'PENDING' ORDER BY requestTimestamp DESC")
     fun getPendingRequestsFlow(): Flow<List<PasswordResetRequest>>
 
@@ -319,6 +364,9 @@ interface PaymentVerificationRequestDao {
 
     @Query("SELECT * FROM payment_verification_requests ORDER BY requestTimestamp DESC")
     fun getAllRequestsFlow(): Flow<List<PaymentVerificationRequest>>
+
+    @Query("SELECT * FROM payment_verification_requests")
+    suspend fun getAllRequestsSync(): List<PaymentVerificationRequest>
 
     @Query("SELECT * FROM payment_verification_requests WHERE status = 'PENDING' ORDER BY requestTimestamp DESC")
     fun getPendingRequestsFlow(): Flow<List<PaymentVerificationRequest>>

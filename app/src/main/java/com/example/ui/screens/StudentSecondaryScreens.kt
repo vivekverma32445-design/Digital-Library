@@ -37,10 +37,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
+import com.example.util.AppImageViewer
+import com.example.util.ImageUtils
 import com.example.data.model.AttendanceRecord
 import com.example.data.model.PaymentRecord
 import com.example.data.model.PaymentVerificationRequest
@@ -271,31 +274,36 @@ fun AttendanceScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Box(
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(44.dp)
                                 .clip(CircleShape)
                                 .background(if (currentStreak > 0) Color(0xFFFFE082) else MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = if (currentStreak > 0) "🔥" else "⭐",
-                                fontSize = 26.sp
+                                fontSize = 24.sp
                             )
                         }
-                        Spacer(Modifier.width(12.dp))
-                        Column {
+                        Spacer(Modifier.width(10.dp))
+                        Column(modifier = Modifier.padding(end = 6.dp)) {
                             Text(
                                 text = "$currentStreak Day${if (currentStreak == 1) "" else "s"} Streak",
-                                fontSize = 20.sp,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = if (currentStreak > 0) Color(0xFFE65100) else MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = if (currentStreak > 0) "Daily Attendance Consistency" else "Start your learning streak today",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontSize = 11.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -308,8 +316,10 @@ fun AttendanceScreen(
                             text = if (currentStreak > 0) "ACTIVE" else "INACTIVE",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
                             color = if (currentStreak > 0) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)
                         )
                     }
                 }
@@ -988,7 +998,7 @@ fun PaymentHistoryScreen(
                         }
                     }
                     Spacer(Modifier.height(8.dp))
-                    AsyncImage(
+                    AppImageViewer(
                         model = previewImageUri,
                         contentDescription = "Payment Proof",
                         modifier = Modifier
@@ -1320,13 +1330,20 @@ fun RaiseComplaintScreen(
     var description by remember { mutableStateOf("") }
     var categoryExpanded by remember { mutableStateOf(false) }
     var attachedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var attachedBase64 by remember { mutableStateOf<String?>(null) }
     var isSubmitted by remember { mutableStateOf(false) }
     var selectedImageForPreview by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         attachedImageUri = uri
+        if (uri != null) {
+            attachedBase64 = ImageUtils.uriToBase64(context, uri) ?: uri.toString()
+        } else {
+            attachedBase64 = null
+        }
     }
 
     Column(
@@ -1450,14 +1467,17 @@ fun RaiseComplaintScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .border(1.dp, PrimaryGreen.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
             ) {
-                AsyncImage(
-                    model = attachedImageUri,
+                AppImageViewer(
+                    model = attachedBase64 ?: attachedImageUri,
                     contentDescription = "Attached Photo",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
                 IconButton(
-                    onClick = { attachedImageUri = null },
+                    onClick = {
+                        attachedImageUri = null
+                        attachedBase64 = null
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
@@ -1509,12 +1529,13 @@ fun RaiseComplaintScreen(
                     viewModel.submitComplaint(
                         category = selectedCategory,
                         desc = description,
-                        imageUri = attachedImageUri?.toString(),
+                        imageUri = attachedBase64 ?: attachedImageUri?.toString(),
                         title = issueTitle.ifBlank { "" }
                     ) {
                         description = ""
                         issueTitle = ""
                         attachedImageUri = null
+                        attachedBase64 = null
                         isSubmitted = true
                     }
                 }
@@ -1645,7 +1666,7 @@ fun RaiseComplaintScreen(
                                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
                                     .clickable { selectedImageForPreview = cmp.imageUri }
                             ) {
-                                AsyncImage(
+                                AppImageViewer(
                                     model = cmp.imageUri,
                                     contentDescription = "Complaint image",
                                     modifier = Modifier.fillMaxSize(),
@@ -1654,9 +1675,40 @@ fun RaiseComplaintScreen(
                             }
                         }
 
-                        // Admin Reply Container
-                        if (!cmp.adminReply.isNullOrBlank()) {
+                        // Admin Reply Container & Resolution Status
+                        val isResolved = cmp.status.equals("Resolved", ignoreCase = true)
+
+                        if (isResolved) {
                             Spacer(Modifier.height(10.dp))
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFE8F8EE),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGreen.copy(alpha = 0.5f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = PrimaryGreen,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        text = "COMPLAINT RESOLVE HO CHUKA HAI ✓",
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PrimaryGreen
+                                    )
+                                }
+                            }
+                        }
+
+                        if (!cmp.adminReply.isNullOrBlank()) {
+                            Spacer(Modifier.height(8.dp))
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(10.dp),
@@ -1671,19 +1723,33 @@ fun RaiseComplaintScreen(
                                         Icons.Default.SupportAgent,
                                         contentDescription = null,
                                         tint = PrimaryGreen,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(Modifier.width(8.dp))
                                     Column {
-                                        Text(
-                                            text = "Admin Response",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = PrimaryGreen
-                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Admin Reply / Jawab",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = PrimaryGreen
+                                            )
+                                            if (isResolved) {
+                                                Text(
+                                                    text = "Resolved",
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = PrimaryGreen
+                                                )
+                                            }
+                                        }
                                         Text(
                                             text = cmp.adminReply,
-                                            fontSize = 12.sp,
+                                            fontSize = 12.5.sp,
                                             color = MaterialTheme.colorScheme.onSurface,
                                             modifier = Modifier.padding(top = 2.dp)
                                         )
@@ -1707,7 +1773,7 @@ fun RaiseComplaintScreen(
                             .height(300.dp)
                             .clip(RoundedCornerShape(12.dp))
                     ) {
-                        AsyncImage(
+                        AppImageViewer(
                             model = imgUri,
                             contentDescription = "Full photo preview",
                             modifier = Modifier.fillMaxSize(),
@@ -1781,7 +1847,7 @@ fun ProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (!userProfilePhotoUri.isNullOrBlank()) {
-                    AsyncImage(
+                    AppImageViewer(
                         model = userProfilePhotoUri,
                         contentDescription = "Profile Picture",
                         modifier = Modifier

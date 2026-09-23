@@ -1,9 +1,13 @@
 package com.example.data.model
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "users")
+@Entity(
+    tableName = "users",
+    indices = [Index(value = ["mobile"], unique = true), Index(value = ["role"])]
+)
 data class User(
     @PrimaryKey val id: String, // e.g. "DL-2026-00001"
     val fullName: String,
@@ -34,7 +38,10 @@ data class Seat(
     val notes: String = ""
 )
 
-@Entity(tableName = "memberships")
+@Entity(
+    tableName = "memberships",
+    indices = [Index(value = ["studentId"]), Index(value = ["seatNumber"]), Index(value = ["status"])]
+)
 data class Membership(
     @PrimaryKey val id: String,
     val studentId: String,
@@ -93,7 +100,10 @@ data class Membership(
         get() = !isExpired && getDaysRemaining() in 1..5
 }
 
-@Entity(tableName = "seat_allocations")
+@Entity(
+    tableName = "seat_allocations",
+    indices = [Index(value = ["seatNumber", "shiftId"]), Index(value = ["studentId"]), Index(value = ["status"])]
+)
 data class SeatAllocation(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val seatNumber: String,
@@ -104,7 +114,10 @@ data class SeatAllocation(
     val status: String // "CONFIRMED", "HELD"
 )
 
-@Entity(tableName = "attendance_records")
+@Entity(
+    tableName = "attendance_records",
+    indices = [Index(value = ["studentId"]), Index(value = ["dateStr"]), Index(value = ["status"]), Index(value = ["isInside"])]
+)
 data class AttendanceRecord(
     @PrimaryKey val id: String,
     val studentId: String,
@@ -141,7 +154,10 @@ data class AttendanceScanResult(
     val errorCode: String? = null
 )
 
-@Entity(tableName = "payments")
+@Entity(
+    tableName = "payments",
+    indices = [Index(value = ["studentId"]), Index(value = ["dateStr"])]
+)
 data class PaymentRecord(
     @PrimaryKey val id: String, // "TXN-10294"
     val studentId: String,
@@ -155,7 +171,10 @@ data class PaymentRecord(
     val remarks: String = ""
 )
 
-@Entity(tableName = "complaints")
+@Entity(
+    tableName = "complaints",
+    indices = [Index(value = ["studentId"]), Index(value = ["status"])]
+)
 data class Complaint(
     @PrimaryKey val id: String,
     val studentId: String,
@@ -182,7 +201,10 @@ data class Announcement(
     val expiryDateMillis: Long? = null // epoch millis when announcement expires
 )
 
-@Entity(tableName = "notifications")
+@Entity(
+    tableName = "notifications",
+    indices = [Index(value = ["targetStudentId"]), Index(value = ["isRead"])]
+)
 data class NotificationItem(
     @PrimaryKey val id: String,
     val title: String,
@@ -233,7 +255,10 @@ data class AdminAuthLog(
     val details: String = ""
 )
 
-@Entity(tableName = "password_reset_requests")
+@Entity(
+    tableName = "password_reset_requests",
+    indices = [Index(value = ["mobile"]), Index(value = ["status"])]
+)
 data class PasswordResetRequest(
     @PrimaryKey val id: String, // "PRR-${System.currentTimeMillis()}"
     val userId: String,
@@ -249,7 +274,10 @@ data class PasswordResetRequest(
     val requestType: String = "RESET" // "RESET" (Forgot Password) or "CHANGE" (Profile Password Change)
 )
 
-@Entity(tableName = "payment_verification_requests")
+@Entity(
+    tableName = "payment_verification_requests",
+    indices = [Index(value = ["studentId"]), Index(value = ["status"])]
+)
 data class PaymentVerificationRequest(
     @PrimaryKey val id: String, // "PVR-${System.currentTimeMillis()}"
     val studentId: String,

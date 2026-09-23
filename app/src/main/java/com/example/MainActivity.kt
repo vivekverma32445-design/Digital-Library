@@ -8,6 +8,12 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +25,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.MainViewModel
@@ -67,7 +74,19 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    when (currentScreen) {
+                    AnimatedContent(
+                        targetState = currentScreen,
+                        transitionSpec = {
+                            (fadeIn(animationSpec = tween(350)) +
+                                    scaleIn(initialScale = 0.97f, animationSpec = tween(350)))
+                                .togetherWith(
+                                    fadeOut(animationSpec = tween(200))
+                                )
+                        },
+                        label = "MainAppScreenNavigationAnimation",
+                        modifier = Modifier.fillMaxSize()
+                    ) { targetScreen ->
+                        when (targetScreen) {
                         "splash" -> {
                             SplashScreen(
                                 onTimeout = {
@@ -188,7 +207,7 @@ class MainActivity : ComponentActivity() {
                                             selected = studentTab == "home",
                                             onClick = { viewModel.setStudentTab("home") },
                                             icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                                            label = { Text("Home", fontSize = 11.sp) },
+                                            label = { Text("Home", fontSize = 10.5.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) },
                                             colors = NavigationBarItemDefaults.colors(
                                                 selectedIconColor = PrimaryGreen,
                                                 indicatorColor = MaterialTheme.colorScheme.surfaceVariant
@@ -198,7 +217,7 @@ class MainActivity : ComponentActivity() {
                                             selected = studentTab == "seats",
                                             onClick = { viewModel.setStudentTab("seats") },
                                             icon = { Icon(Icons.Default.EventSeat, contentDescription = "Seats") },
-                                            label = { Text("Seats", fontSize = 11.sp) },
+                                            label = { Text("Seats", fontSize = 10.5.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) },
                                             colors = NavigationBarItemDefaults.colors(
                                                 selectedIconColor = PrimaryGreen,
                                                 indicatorColor = MaterialTheme.colorScheme.surfaceVariant
@@ -208,7 +227,7 @@ class MainActivity : ComponentActivity() {
                                             selected = studentTab == "attendance",
                                             onClick = { viewModel.setStudentTab("attendance") },
                                             icon = { Icon(Icons.Default.FactCheck, contentDescription = "Attendance") },
-                                            label = { Text("Attendance", fontSize = 11.sp) },
+                                            label = { Text("Attendance", fontSize = 10.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) },
                                             colors = NavigationBarItemDefaults.colors(
                                                 selectedIconColor = PrimaryGreen,
                                                 indicatorColor = MaterialTheme.colorScheme.surfaceVariant
@@ -218,7 +237,7 @@ class MainActivity : ComponentActivity() {
                                             selected = studentTab == "payments",
                                             onClick = { viewModel.setStudentTab("payments") },
                                             icon = { Icon(Icons.Default.Payment, contentDescription = "Payments") },
-                                            label = { Text("Payments", fontSize = 11.sp) },
+                                            label = { Text("Payments", fontSize = 10.5.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) },
                                             colors = NavigationBarItemDefaults.colors(
                                                 selectedIconColor = PrimaryGreen,
                                                 indicatorColor = MaterialTheme.colorScheme.surfaceVariant
@@ -228,7 +247,7 @@ class MainActivity : ComponentActivity() {
                                             selected = studentTab == "profile",
                                             onClick = { viewModel.setStudentTab("profile") },
                                             icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                                            label = { Text("Profile", fontSize = 11.sp) },
+                                            label = { Text("Profile", fontSize = 10.5.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) },
                                             colors = NavigationBarItemDefaults.colors(
                                                 selectedIconColor = PrimaryGreen,
                                                 indicatorColor = MaterialTheme.colorScheme.surfaceVariant
@@ -273,6 +292,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+                    }
                     }
 
                     // Global Digital Receipt Modal Dialog

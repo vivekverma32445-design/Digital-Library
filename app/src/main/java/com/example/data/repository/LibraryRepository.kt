@@ -9,14 +9,24 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import com.example.util.AttendanceUtils
 import com.example.data.remote.FirebaseSyncService
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class LibraryRepository(val db: AppDatabase) {
 
     init {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                db.notificationDao().sanitizeAdminNotifications()
+            } catch (_: Exception) {}
+        }
         FirebaseSyncService.syncInitialData(db)
+        FirebaseSyncService.startRealtimeSync(db)
     }
 
     // Anti-rapid scan cache for duplicate scan prevention
@@ -24,6 +34,14 @@ class LibraryRepository(val db: AppDatabase) {
 
     // Security rate-limiting structures for Administrator Portal
     private val adminFailedAttempts = ConcurrentHashMap<String, MutableList<Long>>()
+
+    /**
+     * Highly resilient, collision-safe ID generator for high concurrency (1000+ users).
+     */
+    fun generateUniqueId(prefix: String): String {
+        val rand = (10000..99999).random()
+        return "$prefix-${System.currentTimeMillis()}-$rand"
+    }
 
     // Official Library Entrance QR Identifier
     val officialLibraryQrCode = "MDDL-GHAZIPUR-MAIN-GATE"
@@ -54,8 +72,17 @@ class LibraryRepository(val db: AppDatabase) {
     fun getUnreadNotificationCount(studentId: String): Flow<Int> =
         db.notificationDao().getUnreadCount(studentId)
 
+    fun getNotificationsForAdmin(): Flow<List<NotificationItem>> =
+        db.notificationDao().getNotificationsForAdmin()
+
+    fun getAdminUnreadNotificationCount(): Flow<Int> =
+        db.notificationDao().getAdminUnreadCount()
+
     suspend fun markAllNotificationsAsRead(studentId: String) =
         db.notificationDao().markAllAsRead(studentId)
+
+    suspend fun markAllAdminNotificationsAsRead() =
+        db.notificationDao().markAllAdminAsRead()
 
     suspend fun markNotificationAsRead(id: String) =
         db.notificationDao().markAsRead(id)
@@ -89,8 +116,16 @@ class LibraryRepository(val db: AppDatabase) {
     fun getAllocationsForShift(shiftId: Int): Flow<List<SeatAllocation>> =
         db.seatAllocationDao().getAllocationsForShift(shiftId)
 
-    suspend fun getUserByMobile(mobile: String): User? =
-        db.userDao().getUserByMobile(mobile)
+    suspend fun getUserByMobile(mobile: String): User? {
+        val local = db.userDao().getUserByMobile(mobile)
+        if (local != null) return local
+        val remote = FirebaseSyncService.fetchUserByMobile(mobile)
+        if (remote != null) {
+            db.userDao().insertUser(remote)
+            return remote
+        }
+        return null
+    }
 
     suspend fun getUserById(id: String): User? =
         db.userDao().getUserById(id)
@@ -102,12 +137,21 @@ class LibraryRepository(val db: AppDatabase) {
         gender: String,
         password: String
     ): Result<User> {
-        val existing = db.userDao().getUserByMobile(mobile)
+        val existing = getUserByMobile(mobile)
         if (existing != null) {
             return Result.failure(Exception("Mobile number is already registered."))
         }
         val count = db.userDao().getStudentCount().first()
-        val nextId = String.format("DL-2026-%05d", count + 1)
+        var nextId: String
+        var attempts = 0
+        do {
+            val randomSuffix = (1000..9999).random()
+            nextId = String.format("DL-2026-%05d", ((count + 1 + attempts) * 100 + (randomSuffix % 100)) % 90000 + 10000)
+            attempts++
+        } while (db.userDao().getUserById(nextId) != null && attempts < 10)
+        if (db.userDao().getUserById(nextId) != null) {
+            nextId = "DL-2026-${(10000..99999).random()}"
+        }
         val newUser = User(
             id = nextId,
             fullName = fullName,
@@ -473,6 +517,7 @@ class LibraryRepository(val db: AppDatabase) {
                 requestType = "CHANGE"
             )
             db.passwordResetRequestDao().updateRequest(savedRequest)
+            FirebaseSyncService.syncPasswordResetRequest(savedRequest)
         } else {
             val requestId = "PCR-${now % 1000000}"
             savedRequest = PasswordResetRequest(
@@ -487,18 +532,32 @@ class LibraryRepository(val db: AppDatabase) {
                 requestType = "CHANGE"
             )
             db.passwordResetRequestDao().insertRequest(savedRequest)
+            FirebaseSyncService.syncPasswordResetRequest(savedRequest)
         }
 
-        // Notify Admin of student password change request
+        // Notify Admin of student password change request (Strictly for ADMIN only)
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-ADM-PWD-${now % 100000}",
+                id = generateUniqueId("NOTIF-ADM-PWD"),
                 title = "Password Change Request",
                 description = "${user.fullName} (+91 $cleanMobile) verified current password and submitted a change request. Awaiting Admin approval.",
                 timestamp = sdfDate.format(Date(now)),
                 type = "ACCOUNT",
                 isRead = false,
-                targetStudentId = null
+                targetStudentId = "ADMIN"
+            )
+        )
+
+        // Private confirmation strictly for THIS student only
+        db.notificationDao().insertNotification(
+            NotificationItem(
+                id = generateUniqueId("NOTIF-STU-PWD"),
+                title = "Password Change Submitted ⏳",
+                description = "Your password change request has been securely submitted to the Admin. You will be notified once approved.",
+                timestamp = sdfDate.format(Date(now)),
+                type = "ACCOUNT",
+                isRead = false,
+                targetStudentId = user.id
             )
         )
 
@@ -550,8 +609,9 @@ class LibraryRepository(val db: AppDatabase) {
                 requestTimestamp = now
             )
             db.passwordResetRequestDao().updateRequest(savedRequest)
+            FirebaseSyncService.syncPasswordResetRequest(savedRequest)
         } else {
-            val requestId = "PRR-${now % 1000000}"
+            val requestId = generateUniqueId("PRR")
             savedRequest = PasswordResetRequest(
                 id = requestId,
                 userId = user.id,
@@ -563,18 +623,32 @@ class LibraryRepository(val db: AppDatabase) {
                 status = "PENDING"
             )
             db.passwordResetRequestDao().insertRequest(savedRequest)
+            FirebaseSyncService.syncPasswordResetRequest(savedRequest)
         }
 
-        // Notify Admin of new password reset request
+        // Notify Admin of new password reset request (Strictly for ADMIN only)
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-ADM-PWD-${now % 100000}",
+                id = generateUniqueId("NOTIF-ADM-PWD"),
                 title = "Password Reset Request",
                 description = "${user.fullName} (+91 $cleanMobile) requested a password reset. Requires Admin approval.",
                 timestamp = sdfDate.format(Date(now)),
                 type = "ACCOUNT",
                 isRead = false,
-                targetStudentId = null
+                targetStudentId = "ADMIN"
+            )
+        )
+
+        // Private confirmation strictly for THIS student only
+        db.notificationDao().insertNotification(
+            NotificationItem(
+                id = generateUniqueId("NOTIF-STU-PWD"),
+                title = "Password Reset Submitted ⏳",
+                description = "Your password reset request has been securely submitted to the Admin. Once approved, you can log in with your new password.",
+                timestamp = sdfDate.format(Date(now)),
+                type = "ACCOUNT",
+                isRead = false,
+                targetStudentId = user.id
             )
         )
 
@@ -601,15 +675,16 @@ class LibraryRepository(val db: AppDatabase) {
 
         // Activate new password securely
         db.userDao().updatePassword(request.mobile, request.pendingPasswordHash)
+        FirebaseSyncService.syncUser(user.copy(passwordHash = request.pendingPasswordHash))
 
         // Mark request as APPROVED
-        db.passwordResetRequestDao().updateRequest(
-            request.copy(
-                status = "APPROVED",
-                reviewedByAdminId = adminId,
-                reviewedTimestamp = now
-            )
+        val approvedPRR = request.copy(
+            status = "APPROVED",
+            reviewedByAdminId = adminId,
+            reviewedTimestamp = now
         )
+        db.passwordResetRequestDao().updateRequest(approvedPRR)
+        FirebaseSyncService.syncPasswordResetRequest(approvedPRR)
 
         // Notify user
         val isChange = request.requestType == "CHANGE"
@@ -621,7 +696,7 @@ class LibraryRepository(val db: AppDatabase) {
         }
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-PWD-APPR-${now % 100000}",
+                id = generateUniqueId("NOTIF-PWD-APPR"),
                 title = notifTitle,
                 description = notifDesc,
                 timestamp = sdfTime.format(Date(now)),
@@ -650,14 +725,14 @@ class LibraryRepository(val db: AppDatabase) {
         val istTz = TimeZone.getTimeZone("Asia/Kolkata")
         val sdfTime = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.ENGLISH).apply { timeZone = istTz }
 
-        db.passwordResetRequestDao().updateRequest(
-            request.copy(
-                status = "REJECTED",
-                adminNotes = adminNotes?.trim(),
-                reviewedByAdminId = adminId,
-                reviewedTimestamp = now
-            )
+        val rejectedPRR = request.copy(
+            status = "REJECTED",
+            adminNotes = adminNotes?.trim(),
+            reviewedByAdminId = adminId,
+            reviewedTimestamp = now
         )
+        db.passwordResetRequestDao().updateRequest(rejectedPRR)
+        FirebaseSyncService.syncPasswordResetRequest(rejectedPRR)
 
         val noteMsg = if (!adminNotes.isNullOrBlank()) " Note: $adminNotes." else ""
         val isChange = request.requestType == "CHANGE"
@@ -669,7 +744,7 @@ class LibraryRepository(val db: AppDatabase) {
         }
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-PWD-REJ-${now % 100000}",
+                id = generateUniqueId("NOTIF-PWD-REJ"),
                 title = rejTitle,
                 description = rejDesc,
                 timestamp = sdfTime.format(Date(now)),
@@ -690,15 +765,27 @@ class LibraryRepository(val db: AppDatabase) {
         checkAndProcessMembershipExpiries()
         val unavailableShiftTitles = mutableListOf<String>()
         for (shiftId in shiftIds) {
+            val shift = db.shiftDao().getShiftById(shiftId)
+            val shiftName = shift?.title ?: "Shift $shiftId"
+
+            // 1. Check if requesting student already holds a DIFFERENT seat in this shift
+            if (requestingStudentId != null) {
+                val studentAllocInShift = db.seatAllocationDao().getConfirmedAllocationForStudentAndShift(requestingStudentId, shiftId)
+                if (studentAllocInShift != null && studentAllocInShift.seatNumber != seatNumber) {
+                    unavailableShiftTitles.add("$shiftName (Aapke paas already Seat ${studentAllocInShift.seatNumber} booked hai. Iss shift me aap doosri seat book nahi kar sakte, sirf apni Seat ${studentAllocInShift.seatNumber} extend kar sakte hain)")
+                    continue
+                }
+            }
+
+            // 2. Check allocation for this seat and shift
             val alloc = db.seatAllocationDao().getAllocation(seatNumber, shiftId)
             if (alloc != null) {
                 // If this student already has this seat confirmed, they can extend it
                 if (requestingStudentId != null && alloc.studentId == requestingStudentId && alloc.status == "CONFIRMED") {
                     continue
                 }
-                val shift = db.shiftDao().getShiftById(shiftId)
                 val statusLabel = if (alloc.status == "PENDING") "Pending Verification" else "Occupied"
-                unavailableShiftTitles.add("${shift?.title ?: "Shift $shiftId"} ($statusLabel)")
+                unavailableShiftTitles.add("$shiftName ($statusLabel)")
             }
         }
         return Pair(unavailableShiftTitles.isEmpty(), unavailableShiftTitles)
@@ -710,6 +797,10 @@ class LibraryRepository(val db: AppDatabase) {
         requestingStudentId: String? = null
     ): Boolean {
         return checkSeatAvailabilityForShifts(seatNumber, shiftIds, requestingStudentId).first
+    }
+
+    fun getConfirmedAllocationsForStudent(studentId: String): Flow<List<SeatAllocation>> {
+        return db.seatAllocationDao().getConfirmedAllocationsForStudentFlow(studentId)
     }
 
     suspend fun submitManualPaymentProof(
@@ -728,15 +819,7 @@ class LibraryRepository(val db: AppDatabase) {
         val (isAvailable, unavailableShifts) = checkSeatAvailabilityForShifts(seatNumber, shiftIds, student.id)
         if (!isAvailable) {
             return@withTransaction Result.failure(
-                Exception("Seat $seatNumber is unavailable in: ${unavailableShifts.joinToString(", ")}. Please choose another seat.")
-            )
-        }
-
-        val activeMem = db.membershipDao().getActiveMembershipSync(student.id)
-        val isExtendingExisting = activeMem != null && !activeMem.isExpired && activeMem.status == "ACTIVE"
-        if (isExtendingExisting && activeMem!!.seatNumber != seatNumber) {
-            return@withTransaction Result.failure(
-                Exception("You already hold active Seat ${activeMem.seatNumber}. As per library policy, one student can hold only one seat.")
+                Exception("Seat $seatNumber cannot be booked: ${unavailableShifts.joinToString(", ")}. Please choose an available seat.")
             )
         }
 
@@ -758,20 +841,20 @@ class LibraryRepository(val db: AppDatabase) {
         val istTz = TimeZone.getTimeZone("Asia/Kolkata")
         val sdfDate = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.ENGLISH).apply { timeZone = istTz }
         val now = System.currentTimeMillis()
-        val requestId = "PVR-${now % 1000000}"
+        val requestId = generateUniqueId("PVR")
 
         // 1. Lock seat immediately with status = "PENDING"
         effectiveShifts.forEach { shift ->
-            db.seatAllocationDao().insertAllocation(
-                SeatAllocation(
-                    seatNumber = seatNumber,
-                    shiftId = shift.id,
-                    studentId = student.id,
-                    studentName = student.fullName,
-                    membershipId = requestId,
-                    status = "PENDING"
-                )
+            val alloc = SeatAllocation(
+                seatNumber = seatNumber,
+                shiftId = shift.id,
+                studentId = student.id,
+                studentName = student.fullName,
+                membershipId = requestId,
+                status = "PENDING"
             )
+            db.seatAllocationDao().insertAllocation(alloc)
+            FirebaseSyncService.syncSeatAllocation(alloc)
         }
 
         // 2. Insert Payment Verification Request
@@ -793,11 +876,12 @@ class LibraryRepository(val db: AppDatabase) {
             status = "PENDING"
         )
         db.paymentVerificationRequestDao().insertRequest(request)
+        FirebaseSyncService.syncPaymentVerificationRequest(request)
 
         // 3. Insert student notification
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-PAY-SUB-${now % 100000}",
+                id = generateUniqueId("NOTIF-PAY-SUB"),
                 title = "Payment Proof Submitted ⏳",
                 description = "Your payment proof for Seat $seatNumber ($shiftTitles) for $months month(s) has been submitted. Your seat is locked pending Admin verification.",
                 timestamp = sdfDate.format(Date(now)),
@@ -807,16 +891,16 @@ class LibraryRepository(val db: AppDatabase) {
             )
         )
 
-        // 4. Insert admin notification
+        // 4. Insert admin notification (Strictly for ADMIN only)
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-ADM-PAY-${now % 100000}",
+                id = generateUniqueId("NOTIF-ADM-PAY"),
                 title = "New Payment Verification Request",
                 description = "${student.fullName} (+91 ${student.mobile}) submitted payment proof of ₹$totalAmount for Seat $seatNumber ($shiftTitles).",
                 timestamp = sdfDate.format(Date(now)),
                 type = "PAYMENT_REMINDER",
                 isRead = false,
-                targetStudentId = null
+                targetStudentId = "ADMIN"
             )
         )
 
@@ -879,7 +963,7 @@ class LibraryRepository(val db: AppDatabase) {
             val expiryMillis = expiryCal.timeInMillis
             val expiryDate = sdfDate.format(expiryCal.time)
 
-            val membershipId = "MEM-${now % 100000}"
+            val membershipId = generateUniqueId("MEM")
             finalMembership = Membership(
                 id = membershipId,
                 studentId = student.id,
@@ -908,10 +992,20 @@ class LibraryRepository(val db: AppDatabase) {
                 status = "CONFIRMED",
                 membershipId = finalMembership.id
             )
+            FirebaseSyncService.syncSeatAllocation(
+                SeatAllocation(
+                    seatNumber = request.seatNumber,
+                    shiftId = shiftId,
+                    studentId = student.id,
+                    studentName = student.fullName,
+                    membershipId = finalMembership.id,
+                    status = "CONFIRMED"
+                )
+            )
         }
 
         // Insert Payment Record
-        val txnId = "TXN-${now % 100000}"
+        val txnId = generateUniqueId("TXN")
         val paymentRecord = PaymentRecord(
             id = txnId,
             studentId = student.id,
@@ -927,19 +1021,19 @@ class LibraryRepository(val db: AppDatabase) {
         FirebaseSyncService.syncPayment(paymentRecord)
 
         // Update request status to CONFIRMED
-        db.paymentVerificationRequestDao().updateRequest(
-            request.copy(
-                status = "CONFIRMED",
-                reviewedByAdminId = adminId,
-                reviewedTimestamp = now
-            )
+        val confirmedReq = request.copy(
+            status = "CONFIRMED",
+            reviewedByAdminId = adminId,
+            reviewedTimestamp = now
         )
+        db.paymentVerificationRequestDao().updateRequest(confirmedReq)
+        FirebaseSyncService.syncPaymentVerificationRequest(confirmedReq)
 
         // Send confirmation notification to student
         val sdfTime = SimpleDateFormat("dd MMM, hh:mm a", Locale.ENGLISH).apply { timeZone = istTz }
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-VERIF-OK-${now % 100000}",
+                id = generateUniqueId("NOTIF-VERIF-OK"),
                 title = "Payment Confirmed & Seat Allotted! 🎉",
                 description = "Your payment of ₹${request.amount} has been verified by the Admin. Seat ${request.seatNumber} (${request.shiftTitles}) is now confirmed till ${finalMembership.expiryDate}.",
                 timestamp = sdfTime.format(Date(now)),
@@ -972,23 +1066,24 @@ class LibraryRepository(val db: AppDatabase) {
         val shiftIds = request.shiftIdsCsv.split(",").mapNotNull { it.trim().toIntOrNull() }
         shiftIds.forEach { shiftId ->
             db.seatAllocationDao().deletePendingAllocationForSeat(request.seatNumber, shiftId)
+            FirebaseSyncService.syncSeatRelease(request.seatNumber, shiftId)
         }
 
         // 2. Mark request as DECLINED
-        db.paymentVerificationRequestDao().updateRequest(
-            request.copy(
-                status = "DECLINED",
-                adminNotes = declineReason?.trim(),
-                reviewedByAdminId = adminId,
-                reviewedTimestamp = now
-            )
+        val declinedReq = request.copy(
+            status = "DECLINED",
+            adminNotes = declineReason?.trim(),
+            reviewedByAdminId = adminId,
+            reviewedTimestamp = now
         )
+        db.paymentVerificationRequestDao().updateRequest(declinedReq)
+        FirebaseSyncService.syncPaymentVerificationRequest(declinedReq)
 
         // 3. Notify student
         val reasonMsg = if (!declineReason.isNullOrBlank()) " Reason: $declineReason." else ""
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-VERIF-DEC-${now % 100000}",
+                id = generateUniqueId("NOTIF-VERIF-DEC"),
                 title = "Payment Verification Declined ❌",
                 description = "Your payment verification for Seat ${request.seatNumber} was declined by the Admin.$reasonMsg The pending seat reservation has been released. Please re-submit or contact the front desk.",
                 timestamp = sdfTime.format(Date(now)),
@@ -1037,15 +1132,12 @@ class LibraryRepository(val db: AppDatabase) {
         val sdfDate = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH).apply { timeZone = istTz }
         val now = System.currentTimeMillis()
 
-        // Enforce: One user can use only one seat. If already active, only allow extending their existing seat.
+        // Check if student is extending an existing seat membership
         val activeMem = db.membershipDao().getActiveMembershipSync(student.id)
-        val isExtendingExisting = activeMem != null && !activeMem.isExpired && activeMem.status == "ACTIVE"
+        val isExtendingExisting = activeMem != null && !activeMem.isExpired && activeMem.status == "ACTIVE" && activeMem.seatNumber == seatNumber
 
         if (isExtendingExisting) {
             val active = activeMem!!
-            if (active.seatNumber != seatNumber) {
-                return Result.failure(Exception("You already hold an active seat (Seat ${active.seatNumber}). As per library policy, one student can hold only one seat. You cannot book another seat until your current membership expires."))
-            }
 
             // Extending existing seat validity
             val baseExpiryMillis = active.expiryDateMillis.coerceAtLeast(now)
@@ -1072,40 +1164,41 @@ class LibraryRepository(val db: AppDatabase) {
             effectiveShifts.forEach { shift ->
                 val alloc = db.seatAllocationDao().getAllocation(seatNumber, shift.id)
                 if (alloc == null) {
-                    db.seatAllocationDao().insertAllocation(
-                        SeatAllocation(
-                            seatNumber = seatNumber,
-                            shiftId = shift.id,
-                            studentId = student.id,
-                            studentName = student.fullName,
-                            membershipId = active.id,
-                            status = "CONFIRMED"
-                        )
+                    val newAlloc = SeatAllocation(
+                        seatNumber = seatNumber,
+                        shiftId = shift.id,
+                        studentId = student.id,
+                        studentName = student.fullName,
+                        membershipId = active.id,
+                        status = "CONFIRMED"
                     )
+                    db.seatAllocationDao().insertAllocation(newAlloc)
+                    FirebaseSyncService.syncSeatAllocation(newAlloc)
                 }
             }
 
             // Insert payment record
-            val txnId = "TXN-${System.currentTimeMillis() % 100000}"
-            db.paymentDao().insertPayment(
-                PaymentRecord(
-                    id = txnId,
-                    studentId = student.id,
-                    studentName = student.fullName,
-                    amount = totalAmount,
-                    shiftDescription = "$shiftTitles (Extension +$months Month${if (months > 1) "s" else ""})",
-                    dateStr = sdfDate.format(Date(now)),
-                    status = "Paid",
-                    upiRefId = upiTxnId
-                )
+            val txnId = generateUniqueId("TXN")
+            val extPayment = PaymentRecord(
+                id = txnId,
+                studentId = student.id,
+                studentName = student.fullName,
+                amount = totalAmount,
+                shiftDescription = "$shiftTitles (Extension +$months Month${if (months > 1) "s" else ""})",
+                dateStr = sdfDate.format(Date(now)),
+                status = "Paid",
+                upiRefId = upiTxnId
             )
+            db.paymentDao().insertPayment(extPayment)
+            FirebaseSyncService.syncPayment(extPayment)
+            FirebaseSyncService.syncMembership(updatedMem)
 
             // Extension notification
             val sdfTime = SimpleDateFormat("dd MMM, hh:mm a", Locale.ENGLISH).apply { timeZone = istTz }
             val timeNow = sdfTime.format(Date())
             db.notificationDao().insertNotification(
                 NotificationItem(
-                    id = "NOTIF-EXT-${System.currentTimeMillis()}",
+                    id = generateUniqueId("NOTIF-EXT"),
                     title = "Seat Extension Successful! 🎉",
                     description = "Your membership for Seat $seatNumber ($shiftTitles) has been extended by $months month(s) up to $newExpiryDate.",
                     timestamp = timeNow,
@@ -1119,10 +1212,10 @@ class LibraryRepository(val db: AppDatabase) {
         }
 
         // New admission booking:
-        val (isAvailable, unavailableShifts) = checkSeatAvailabilityForShifts(seatNumber, shiftIds)
+        val (isAvailable, unavailableShifts) = checkSeatAvailabilityForShifts(seatNumber, shiftIds, student.id)
         if (!isAvailable) {
             val shiftsText = unavailableShifts.joinToString(", ")
-            return Result.failure(Exception("Seat $seatNumber is unavailable because it is already booked in $shiftsText. Please choose an available seat or select different shifts."))
+            return Result.failure(Exception("Seat $seatNumber is unavailable: $shiftsText. Please choose an available seat or select different shifts."))
         }
 
         val startCal = Calendar.getInstance(istTz)
@@ -1136,7 +1229,7 @@ class LibraryRepository(val db: AppDatabase) {
         val expiryMillis = expiryCal.timeInMillis
         val expiryDate = sdfDate.format(expiryCal.time)
 
-        val membershipId = "MEM-${System.currentTimeMillis() % 100000}"
+        val membershipId = generateUniqueId("MEM")
         val membership = Membership(
             id = membershipId,
             studentId = student.id,
@@ -1155,35 +1248,36 @@ class LibraryRepository(val db: AppDatabase) {
 
         // Insert membership
         db.membershipDao().insertMembership(membership)
+        FirebaseSyncService.syncMembership(membership)
 
         // Insert confirmed seat allocations
         effectiveShifts.forEach { shift ->
-            db.seatAllocationDao().insertAllocation(
-                SeatAllocation(
-                    seatNumber = seatNumber,
-                    shiftId = shift.id,
-                    studentId = student.id,
-                    studentName = student.fullName,
-                    membershipId = membershipId,
-                    status = "CONFIRMED"
-                )
+            val alloc = SeatAllocation(
+                seatNumber = seatNumber,
+                shiftId = shift.id,
+                studentId = student.id,
+                studentName = student.fullName,
+                membershipId = membershipId,
+                status = "CONFIRMED"
             )
+            db.seatAllocationDao().insertAllocation(alloc)
+            FirebaseSyncService.syncSeatAllocation(alloc)
         }
 
         // Insert payment record
-        val txnId = "TXN-${System.currentTimeMillis() % 100000}"
-        db.paymentDao().insertPayment(
-            PaymentRecord(
-                id = txnId,
-                studentId = student.id,
-                studentName = student.fullName,
-                amount = totalAmount,
-                shiftDescription = "$shiftTitles ($months Month${if (months > 1) "s" else ""})",
-                dateStr = startDate,
-                status = "Paid",
-                upiRefId = upiTxnId
-            )
+        val txnId = generateUniqueId("TXN")
+        val paymentRecord = PaymentRecord(
+            id = txnId,
+            studentId = student.id,
+            studentName = student.fullName,
+            amount = totalAmount,
+            shiftDescription = "$shiftTitles ($months Month${if (months > 1) "s" else ""})",
+            dateStr = startDate,
+            status = "Paid",
+            upiRefId = upiTxnId
         )
+        db.paymentDao().insertPayment(paymentRecord)
+        FirebaseSyncService.syncPayment(paymentRecord)
 
         // Integrated Payment & Admission Notifications
         val sdfTime = SimpleDateFormat("dd MMM, hh:mm a", Locale.ENGLISH).apply { timeZone = istTz }
@@ -1319,22 +1413,73 @@ class LibraryRepository(val db: AppDatabase) {
             return Result.failure(Exception("USER_INACTIVE: Your account is inactive. Please contact the library administrator."))
         }
 
-        // 2. Validate QR Code matches the registered library entrance gate strictly
+        // 2. Validate QR Code matches the registered library entrance gate
         val raw = scannedQrPayload.trim()
-        if (raw != officialLibraryQrCode) {
+        val isValidGate = raw.equals(officialLibraryQrCode, ignoreCase = true) ||
+                raw.contains("MDDL-GHAZIPUR-MAIN-GATE", ignoreCase = true) ||
+                raw.contains("MDDL-GHAZIPUR", ignoreCase = true) ||
+                raw.contains("MAIN-GATE", ignoreCase = true)
+        if (!isValidGate) {
             return Result.failure(Exception("INVALID_GATE_QR: The scanned QR code is invalid. Please scan the official entrance QR installed at the library gate."))
         }
 
         val now = System.currentTimeMillis()
 
-        // 3. Duplicate scan protection / rate limit (3 seconds debounce to prevent accidental double-fire)
+        // 3. Duplicate scan protection / rate limit (2 seconds debounce to prevent accidental double-fire)
         val lastScan = lastScanTimestamps[student.id] ?: 0L
-        if (now - lastScan < 3000L) {
+        if (now - lastScan < 2000L) {
             return Result.failure(Exception("DUPLICATE_SCAN: Please wait a moment before scanning again."))
         }
 
         // 4. Validate Membership
-        val membership = db.membershipDao().getActiveMembershipSync(student.id)
+        var membership = db.membershipDao().getActiveMembershipSync(student.id)
+        if (membership == null) {
+            // Attempt real-time fetch from Firebase Firestore in case local DB hasn't synced yet
+            try {
+                val remoteDocs = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    .collection("memberships")
+                    .whereEqualTo("studentId", student.id)
+                    .whereEqualTo("isExpired", false)
+                    .get()
+                    .await()
+                val doc = remoteDocs.documents.firstOrNull { d ->
+                    d.getString("status") == "ACTIVE" || d.getString("status") == null
+                }
+                if (doc != null) {
+                    val id = doc.getString("id") ?: "MEM-${System.currentTimeMillis()}"
+                    val studentName = doc.getString("studentName") ?: student.fullName
+                    val seatNumber = doc.getString("seatNumber") ?: ""
+                    val shiftIdsCsv = doc.getString("shiftIdsCsv") ?: ""
+                    val shiftTitles = doc.getString("shiftTitles") ?: ""
+                    val startDate = doc.getString("startDate") ?: ""
+                    val expiryDate = doc.getString("expiryDate") ?: ""
+                    val amount = doc.getLong("amount")?.toInt() ?: 0
+                    val status = doc.getString("status") ?: "ACTIVE"
+                    val durationMonths = doc.getLong("durationMonths")?.toInt() ?: 1
+                    val startDateMillis = doc.getLong("startDateMillis") ?: 0L
+                    val expiryDateMillis = doc.getLong("expiryDateMillis") ?: 0L
+
+                    val fetchedMem = Membership(
+                        id = id,
+                        studentId = student.id,
+                        studentName = studentName,
+                        seatNumber = seatNumber,
+                        shiftIdsCsv = shiftIdsCsv,
+                        shiftTitles = shiftTitles,
+                        startDate = startDate,
+                        expiryDate = expiryDate,
+                        amount = amount,
+                        status = status,
+                        durationMonths = durationMonths,
+                        startDateMillis = startDateMillis,
+                        expiryDateMillis = expiryDateMillis
+                    )
+                    db.membershipDao().insertMembership(fetchedMem)
+                    membership = fetchedMem
+                }
+            } catch (_: Exception) {
+            }
+        }
         if (membership == null) {
             return Result.failure(Exception("NO_MEMBERSHIP: Your membership is not active. Please complete your admission and activate a membership to use the Entry and Exit features."))
         }
@@ -1402,7 +1547,7 @@ class LibraryRepository(val db: AppDatabase) {
             )
         } else {
             // === ENTRY LOGIC ===
-            val recordId = "ATT-${System.currentTimeMillis() % 1000000}"
+            val recordId = generateUniqueId("ATT")
             val newRecord = AttendanceRecord(
                 id = recordId,
                 studentId = student.id,
@@ -1568,7 +1713,7 @@ class LibraryRepository(val db: AppDatabase) {
     ) {
         val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
         val complaint = Complaint(
-            id = "CMP-${System.currentTimeMillis() % 100000}",
+            id = generateUniqueId("CMP"),
             studentId = student.id,
             studentName = student.fullName,
             category = category,
@@ -1585,16 +1730,16 @@ class LibraryRepository(val db: AppDatabase) {
     suspend fun resolveComplaint(complaintId: String, reply: String) {
         val complaints = db.complaintDao().getAllComplaints().first()
         val c = complaints.find { it.id == complaintId } ?: return
-        db.complaintDao().updateComplaint(
-            c.copy(status = "Resolved", adminReply = reply)
-        )
+        val updated = c.copy(status = "Resolved", adminReply = reply)
+        db.complaintDao().updateComplaint(updated)
+        FirebaseSyncService.syncComplaint(updated)
 
         // Add Complaint Status Update Notification
         val sdfTime = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
         val timeNow = sdfTime.format(Date())
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-CMP-${c.id}",
+                id = generateUniqueId("NOTIF-CMP"),
                 title = "Complaint Resolved",
                 description = "Your complaint regarding '${c.category}' was resolved. Reply: $reply",
                 timestamp = timeNow,
@@ -1634,6 +1779,7 @@ class LibraryRepository(val db: AppDatabase) {
             expiryDateMillis = expiryMillis
         )
         db.announcementDao().insertAnnouncement(announcement)
+        FirebaseSyncService.syncAnnouncement(announcement)
 
         // Automatically dispatch to Student Notification Center
         val notif = NotificationItem(
@@ -1652,10 +1798,12 @@ class LibraryRepository(val db: AppDatabase) {
 
     suspend fun updateAnnouncement(announcement: Announcement) {
         db.announcementDao().updateAnnouncement(announcement)
+        FirebaseSyncService.syncAnnouncement(announcement)
     }
 
     suspend fun deleteAnnouncement(id: String) {
         db.announcementDao().deleteAnnouncement(id)
+        FirebaseSyncService.deleteAnnouncementRemote(id)
     }
 
     suspend fun toggleMaintenance(seatNumber: String, isMaintenance: Boolean) {
@@ -1668,16 +1816,16 @@ class LibraryRepository(val db: AppDatabase) {
     }
 
     suspend fun allocateSeatByAdmin(seatNumber: String, shiftId: Int, studentId: String, studentName: String) {
-        db.seatAllocationDao().insertAllocation(
-            SeatAllocation(
-                seatNumber = seatNumber,
-                shiftId = shiftId,
-                studentId = studentId,
-                studentName = studentName,
-                membershipId = "ADMIN-ALLOC-${System.currentTimeMillis() % 10000}",
-                status = "CONFIRMED"
-            )
+        val alloc = SeatAllocation(
+            seatNumber = seatNumber,
+            shiftId = shiftId,
+            studentId = studentId,
+            studentName = studentName,
+            membershipId = generateUniqueId("ADMIN-ALLOC"),
+            status = "CONFIRMED"
         )
+        db.seatAllocationDao().insertAllocation(alloc)
+        FirebaseSyncService.syncSeatAllocation(alloc)
     }
 
     suspend fun updateShift(shiftId: Int, newTitle: String, newFee: Int, newTimeRange: String): Result<Unit> {
@@ -1685,6 +1833,7 @@ class LibraryRepository(val db: AppDatabase) {
             ?: return Result.failure(Exception("Shift not found."))
         val updated = shift.copy(title = newTitle, monthlyFee = newFee, timeRange = newTimeRange)
         db.shiftDao().updateShift(updated)
+        FirebaseSyncService.syncShift(updated)
         return Result.success(Unit)
     }
 
@@ -1700,7 +1849,12 @@ class LibraryRepository(val db: AppDatabase) {
         if (existing != null) {
             return Result.failure(Exception("A student with mobile +91 $cleanMobile is already registered."))
         }
-        val studentId = "STU-${(1000..9999).random()}"
+        var studentId: String
+        var attempts = 0
+        do {
+            studentId = "STU-${(10000..99999).random()}"
+            attempts++
+        } while (db.userDao().getUserById(studentId) != null && attempts < 10)
         val user = User(
             id = studentId,
             fullName = fullName.trim(),
@@ -1712,6 +1866,7 @@ class LibraryRepository(val db: AppDatabase) {
             passwordHash = PasswordSecurity.hashPassword("student@123")
         )
         db.userDao().insertUser(user)
+        FirebaseSyncService.syncUser(user)
         return Result.success(user)
     }
 
@@ -1729,7 +1884,12 @@ class LibraryRepository(val db: AppDatabase) {
         if (existing != null) {
             return Result.failure(Exception("A student with mobile +91 $cleanMobile is already registered."))
         }
-        val studentId = "STU-${(1000..9999).random()}"
+        var studentId: String
+        var attempts = 0
+        do {
+            studentId = "STU-${(10000..99999).random()}"
+            attempts++
+        } while (db.userDao().getUserById(studentId) != null && attempts < 10)
         val userEmail = if (email.isNotBlank()) email.trim() else "${cleanMobile}@library.local"
         val userAddress = if (address.isNotBlank()) address.trim() else "Ghazipur"
         val user = User(
@@ -1743,20 +1903,21 @@ class LibraryRepository(val db: AppDatabase) {
             passwordHash = PasswordSecurity.hashPassword("student@123")
         )
         db.userDao().insertUser(user)
+        FirebaseSyncService.syncUser(user)
 
         // Allocate seat in the selected shift
         val shift = db.shiftDao().getShiftById(shiftId)
-        val membershipId = "MEM-${shiftId}-${System.currentTimeMillis() % 100000}"
-        db.seatAllocationDao().insertAllocation(
-            SeatAllocation(
-                seatNumber = seatNumber,
-                shiftId = shiftId,
-                studentId = studentId,
-                studentName = fullName.trim(),
-                membershipId = membershipId,
-                status = "CONFIRMED"
-            )
+        val membershipId = generateUniqueId("MEM-$shiftId")
+        val alloc = SeatAllocation(
+            seatNumber = seatNumber,
+            shiftId = shiftId,
+            studentId = studentId,
+            studentName = fullName.trim(),
+            membershipId = membershipId,
+            status = "CONFIRMED"
         )
+        db.seatAllocationDao().insertAllocation(alloc)
+        FirebaseSyncService.syncSeatAllocation(alloc)
 
         // Add 30-day membership
         val cal = Calendar.getInstance()
@@ -1768,27 +1929,27 @@ class LibraryRepository(val db: AppDatabase) {
         val endMillis = cal.timeInMillis
         val feeAmt = shift?.monthlyFee ?: 500
 
-        db.membershipDao().insertMembership(
-            Membership(
-                id = membershipId,
-                studentId = studentId,
-                studentName = fullName.trim(),
-                seatNumber = seatNumber,
-                shiftIdsCsv = shiftId.toString(),
-                shiftTitles = shift?.title ?: "Shift $shiftId",
-                startDate = startStr,
-                expiryDate = endStr,
-                amount = feeAmt,
-                status = "ACTIVE",
-                durationMonths = 1,
-                startDateMillis = startMillis,
-                expiryDateMillis = endMillis
-            )
+        val mem = Membership(
+            id = membershipId,
+            studentId = studentId,
+            studentName = fullName.trim(),
+            seatNumber = seatNumber,
+            shiftIdsCsv = shiftId.toString(),
+            shiftTitles = shift?.title ?: "Shift $shiftId",
+            startDate = startStr,
+            expiryDate = endStr,
+            amount = feeAmt,
+            status = "ACTIVE",
+            durationMonths = 1,
+            startDateMillis = startMillis,
+            expiryDateMillis = endMillis
         )
+        db.membershipDao().insertMembership(mem)
+        FirebaseSyncService.syncMembership(mem)
 
         // Record counter admission payment
         val payRecord = PaymentRecord(
-            id = "PAY-ADM-${System.currentTimeMillis() % 1000000}",
+            id = generateUniqueId("PAY-ADM"),
             studentId = studentId,
             studentName = fullName.trim(),
             amount = feeAmt,
@@ -1800,11 +1961,12 @@ class LibraryRepository(val db: AppDatabase) {
             remarks = "Direct Admin Admission"
         )
         db.paymentDao().insertPayment(payRecord)
+        FirebaseSyncService.syncPayment(payRecord)
 
         // Insert Welcome Notification
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-ADM-${System.currentTimeMillis() % 10000}",
+                id = generateUniqueId("NOTIF-ADM"),
                 title = "Welcome to Maa Durga Library!",
                 description = "Your admission in ${shift?.title ?: "Shift $shiftId"} on Seat $seatNumber is confirmed.",
                 timestamp = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault()).format(Date()),
@@ -1818,6 +1980,7 @@ class LibraryRepository(val db: AppDatabase) {
 
     suspend fun deleteStudent(studentId: String): Result<Unit> {
         db.seatAllocationDao().deleteAllocationsForStudent(studentId)
+        FirebaseSyncService.syncDeleteAllocationsForStudent(studentId)
         val activeMem = db.membershipDao().getActiveMembershipSync(studentId)
         if (activeMem != null) {
             val updatedMem = activeMem.copy(status = "CANCELLED")
@@ -1840,7 +2003,7 @@ class LibraryRepository(val db: AppDatabase) {
         val timeNow = sdfTime.format(Date())
         db.notificationDao().insertNotification(
             NotificationItem(
-                id = "NOTIF-CMP-${c.id}-${System.currentTimeMillis() % 10000}",
+                id = generateUniqueId("NOTIF-CMP"),
                 title = "Complaint Status: $newStatus",
                 description = "Your complaint '${c.title.ifBlank { c.category }}' is marked as '$newStatus'. Admin response: $reply",
                 timestamp = timeNow,
@@ -1860,7 +2023,7 @@ class LibraryRepository(val db: AppDatabase) {
         remarks: String = ""
     ): PaymentRecord {
         val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-        val txnId = "TXN-OFFLINE-${System.currentTimeMillis() % 100000}"
+        val txnId = generateUniqueId("TXN-OFFLINE")
         val payment = PaymentRecord(
             id = txnId,
             studentId = studentId,
@@ -1875,5 +2038,25 @@ class LibraryRepository(val db: AppDatabase) {
         )
         db.paymentDao().insertPayment(payment)
         return payment
+    }
+
+    suspend fun deletePaymentRecord(paymentId: String): Result<Boolean> {
+        return try {
+            db.paymentDao().deletePaymentById(paymentId)
+            FirebaseSyncService.deletePaymentRemote(paymentId)
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun resetAllPayments(): Result<Boolean> {
+        return try {
+            db.paymentDao().deleteAllPayments()
+            FirebaseSyncService.deleteAllPaymentsRemote()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

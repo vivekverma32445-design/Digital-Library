@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,6 +38,7 @@ import com.example.ui.MainViewModel
 import com.example.ui.components.DynamicUpiQrCanvas
 import com.example.ui.theme.*
 import com.example.util.QrDownloadUtils
+import com.example.util.AppImageViewer
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -69,7 +71,7 @@ fun AdminDashboardScreen(
     val todayPaidList = allPayments.filter { it.dateStr == todayDateStr && it.status == "Paid" }
     val todayCollectionVal = todayPaidList.sumOf { it.amount }
     val totalPaidVal = allPayments.filter { it.status == "Paid" }.sumOf { it.amount }
-    val todayCollectionDisplay = if (todayCollectionVal > 0) "₹${String.format("%,d", todayCollectionVal)}" else "₹${String.format("%,d", totalPaidVal)}"
+    val todayCollectionDisplay = "₹${String.format(Locale.ENGLISH, "%,d", todayCollectionVal)}"
 
     Column(
         modifier = Modifier
@@ -2105,6 +2107,7 @@ private fun AdminShiftsContent(
     shifts: List<com.example.data.model.Shift>,
     viewModel: MainViewModel
 ) {
+    val context = LocalContext.current
     var shiftToEdit by remember { mutableStateOf<com.example.data.model.Shift?>(null) }
     var editTitle by remember { mutableStateOf("") }
     var editTimeRange by remember { mutableStateOf("") }
@@ -2331,7 +2334,13 @@ private fun AdminShiftsContent(
                             shiftId = s.id,
                             title = editTitle.trim(),
                             timeRange = editTimeRange.trim(),
-                            monthlyFee = fee
+                            monthlyFee = fee,
+                            onSuccess = {
+                                Toast.makeText(context, "Shift ${s.id} updated to ₹$fee successfully! All student devices synced.", Toast.LENGTH_SHORT).show()
+                            },
+                            onError = { err ->
+                                Toast.makeText(context, "Error updating shift: $err", Toast.LENGTH_SHORT).show()
+                            }
                         )
                         shiftToEdit = null
                     },
@@ -3109,6 +3118,11 @@ private fun AdminPaymentsContent(
     // Search and filter
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("ALL") } // ALL, PAID, CASH, UPI
+    var selectedMonthFilter by remember { mutableStateOf("ALL") } // ALL or Month Name e.g. "Sep 2026"
+
+    // Revenue management states
+    var showResetRevenueDialog by remember { mutableStateOf(false) }
+    var paymentToDelete by remember { mutableStateOf<com.example.data.model.PaymentRecord?>(null) }
 
     // Cash Recording Dialog state
     var showRecordCashDialog by remember { mutableStateOf(false) }
@@ -3127,7 +3141,19 @@ private fun AdminPaymentsContent(
         payments.filter { it.status.equals("Paid", ignoreCase = true) || it.status.equals("Completed", ignoreCase = true) }.sumOf { it.amount }
     }
 
-    val filteredPayments = remember(payments, searchQuery, selectedFilter) {
+    // Monthly revenue breakdown map
+    val monthlyRevenueMap = remember(payments) {
+        val map = linkedMapOf<String, Pair<Int, Int>>() // MonthKey -> Pair(TotalAmount, Count)
+        payments.filter { it.status.equals("Paid", ignoreCase = true) || it.status.equals("Completed", ignoreCase = true) }.forEach { p ->
+            val parts = p.dateStr.trim().split(" ")
+            val monthKey = if (parts.size >= 3) "${parts[1]} ${parts[2]}" else if (parts.size == 2) parts.joinToString(" ") else "General"
+            val prev = map[monthKey] ?: Pair(0, 0)
+            map[monthKey] = Pair(prev.first + p.amount, prev.second + 1)
+        }
+        map
+    }
+
+    val filteredPayments = remember(payments, searchQuery, selectedFilter, selectedMonthFilter) {
         payments.filter { p ->
             val matchesQuery = p.studentName.contains(searchQuery, ignoreCase = true) ||
                     p.id.contains(searchQuery, ignoreCase = true) ||
@@ -3138,7 +3164,12 @@ private fun AdminPaymentsContent(
                 "UPI" -> p.paymentMode.contains("UPI", ignoreCase = true) || p.id.startsWith("PAY-UPI")
                 else -> true
             }
-            matchesQuery && matchesFilter
+            val matchesMonth = if (selectedMonthFilter == "ALL") true else {
+                val parts = p.dateStr.trim().split(" ")
+                val monthKey = if (parts.size >= 3) "${parts[1]} ${parts[2]}" else if (parts.size == 2) parts.joinToString(" ") else "General"
+                monthKey == selectedMonthFilter
+            }
+            matchesQuery && matchesFilter && matchesMonth
         }
     }
 
@@ -3148,14 +3179,14 @@ private fun AdminPaymentsContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // Top Header & Manual Record Button
+        // Top Header & Manual Record / Reset Buttons
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Fee & Payment Records",
                         fontSize = 17.sp,
@@ -3169,27 +3200,124 @@ private fun AdminPaymentsContent(
                     )
                 }
 
-                Button(
-                    onClick = {
-                        if (students.isNotEmpty()) {
-                            selectedStudentId = students.first().id
-                            manualStudentName = students.first().fullName
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    OutlinedButton(
+                        onClick = { showResetRevenueDialog = true },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFC62828).copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Reset Revenue", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Button(
+                        onClick = {
+                            if (students.isNotEmpty()) {
+                                selectedStudentId = students.first().id
+                                manualStudentName = students.first().fullName
+                            }
+                            if (shifts.isNotEmpty()) {
+                                val s = shifts.first()
+                                selectedShiftDesc = "${s.title} (${s.timeRange})"
+                                manualAmountText = s.monthlyFee.toString()
+                            }
+                            recordError = null
+                            showRecordCashDialog = true
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Icon(Icons.Default.AddCard, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Collect Cash", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        // Monthly Revenue Analysis Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Analytics, contentDescription = null, tint = PrimaryGreen, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Monthly Revenue Analysis", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         }
-                        if (shifts.isNotEmpty()) {
-                            val s = shifts.first()
-                            selectedShiftDesc = "${s.title} (${s.timeRange})"
-                            manualAmountText = s.monthlyFee.toString()
+                        if (selectedMonthFilter != "ALL") {
+                            TextButton(
+                                onClick = { selectedMonthFilter = "ALL" },
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text("Clear Month Filter", fontSize = 11.sp, color = PrimaryGreen, fontWeight = FontWeight.Bold)
+                            }
                         }
-                        recordError = null
-                        showRecordCashDialog = true
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Icon(Icons.Default.AddCard, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Collect Cash", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    if (monthlyRevenueMap.isEmpty()) {
+                        Text("No monthly revenue history recorded yet.", fontSize = 11.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    } else {
+                        androidx.compose.foundation.lazy.LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(monthlyRevenueMap.entries.toList()) { (monthName, data) ->
+                                val (monthRevenue, count) = data
+                                val isSelected = selectedMonthFilter == monthName
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.surface,
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp,
+                                        if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.outlineVariant
+                                    ),
+                                    modifier = Modifier.clickable {
+                                        selectedMonthFilter = if (isSelected) "ALL" else monthName
+                                    }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        horizontalAlignment = Alignment.Start
+                                    ) {
+                                        Text(
+                                            text = monthName,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(
+                                            text = "₹${String.format(Locale.ENGLISH, "%,d", monthRevenue)}",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = if (isSelected) Color.White else PrimaryGreen
+                                        )
+                                        Text(
+                                            text = "$count transactions",
+                                            fontSize = 9.5.sp,
+                                            color = if (isSelected) Color.White.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -3339,18 +3467,32 @@ private fun AdminPaymentsContent(
                             Text(text = "${p.id} • ${p.dateStr}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(text = p.shiftDescription, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(text = "₹${p.amount}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = PrimaryGreen)
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = Color(0xFFE8F8EE)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(text = "₹${p.amount}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = PrimaryGreen)
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = Color(0xFFE8F8EE)
+                                ) {
+                                    Text(
+                                        text = p.status,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PrimaryGreen,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.width(6.dp))
+                            IconButton(
+                                onClick = { paymentToDelete = p },
+                                modifier = Modifier.size(32.dp)
                             ) {
-                                Text(
-                                    text = p.status,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = PrimaryGreen,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = "Remove Payment",
+                                    tint = Color(0xFFC62828),
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
@@ -3358,6 +3500,94 @@ private fun AdminPaymentsContent(
                 }
             }
         }
+    }
+
+    // Modal: Reset Total Revenue Confirmation
+    if (showResetRevenueDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetRevenueDialog = false },
+            icon = {
+                Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFC62828), modifier = Modifier.size(36.dp))
+            },
+            title = {
+                Text("Reset Total Revenue?", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            },
+            text = {
+                Text(
+                    text = "Yeh action sabhi existing payments history ko clear kar dega aur total revenue reset hokar ₹0 ho jayega.\n\nYeh automatic reset nahi hota, sirf aapke manual confirm karne par hota hai. Kya aap confirm karna chahte hain?",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.resetTotalRevenue {
+                            showResetRevenueDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828))
+                ) {
+                    Text("Haan, Reset Karein", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetRevenueDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Modal: Delete Individual Payment Record Confirmation
+    paymentToDelete?.let { p ->
+        AlertDialog(
+            onDismissRequest = { paymentToDelete = null },
+            icon = {
+                Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = Color(0xFFC62828), modifier = Modifier.size(32.dp))
+            },
+            title = {
+                Text("Remove Payment Record?", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = "Kya aap is payment record ko remove karna chahte hain? Isse total revenue me se ₹${p.amount} deduct ho jayenge.",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("TXN: ${p.id}", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("Student: ${p.studentName}", fontSize = 11.sp)
+                            Text("Amount: ₹${p.amount} (${p.paymentMode})", fontSize = 11.sp, color = PrimaryGreen, fontWeight = FontWeight.Bold)
+                            Text("Date: ${p.dateStr}", fontSize = 11.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deletePayment(p.id) {
+                            paymentToDelete = null
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828))
+                ) {
+                    Text("Delete Record", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { paymentToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     // Modal: Record Cash / Manual Payment
@@ -3692,99 +3922,349 @@ private fun AdminComplaintsContent(
     complaints: List<com.example.data.model.Complaint>,
     viewModel: MainViewModel
 ) {
-    var replyText by remember { mutableStateOf("") }
-    var selectedComplaintId by remember { mutableStateOf<String?>(null) }
+    var fullScreenComplaintImageUri by remember { mutableStateOf<String?>(null) }
+    val replyTextMap = remember { mutableStateMapOf<String, String>() }
+    var editingReplyId by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        items(complaints) { cmp ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = "${cmp.category} (${cmp.studentName})", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (cmp.status == "Resolved") Color(0xFFE8F8EE) else Color(0xFFFFF3E0)
+    val quickReplies = listOf(
+        "Aapki problem solve ho chuki hai. Dhanyawad!",
+        "Issue check kar liya gaya hai aur fix ho chuka hai.",
+        "Technician ne verify kar diya hai, ab issue nahi aayega.",
+        "Maintenance work completed successfully."
+    )
+
+    if (complaints.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No complaints submitted yet.",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(complaints, key = { it.id }) { cmp ->
+                val isResolved = cmp.status.equals("Resolved", ignoreCase = true)
+                val isEditingReply = editingReplyId == cmp.id
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = cmp.status,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (cmp.status == "Resolved") PrimaryGreen else Color(0xFFE65100),
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
+                            Column {
+                                Text(
+                                    text = "${cmp.category} • ${cmp.studentName}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                                if (!cmp.title.isNullOrBlank()) {
+                                    Text(
+                                        text = cmp.title,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (isResolved) Color(0xFFE8F8EE) else Color(0xFFFFF3E0)
+                            ) {
+                                Text(
+                                    text = if (isResolved) "RESOLVED ✓" else "PENDING",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isResolved) PrimaryGreen else Color(0xFFE65100),
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                )
+                            }
                         }
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    Text(text = cmp.description, fontSize = 12.5.sp, color = MaterialTheme.colorScheme.onSurface)
 
-                    // Display attached photo if student uploaded one
-                    if (!cmp.imageUri.isNullOrBlank()) {
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Attached Photo / Evidence:",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = cmp.description,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                        Spacer(Modifier.height(4.dp))
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(180.dp)
-                        ) {
-                            AsyncImage(
-                                model = cmp.imageUri,
-                                contentDescription = "Complaint Attachment",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(8.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
 
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                        // Attached Photo / Proof Thumbnail
+                        if (!cmp.imageUri.isNullOrBlank()) {
+                            Spacer(Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Attached Photo / Evidence:",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "Tap to view full image 🔍",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = PrimaryGreen
+                                )
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(170.dp)
+                                    .clickable { fullScreenComplaintImageUri = cmp.imageUri }
+                            ) {
+                                Box {
+                                    AppImageViewer(
+                                        model = cmp.imageUri,
+                                        contentDescription = "Complaint Attachment",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(topStart = 8.dp, bottomEnd = 8.dp),
+                                        color = Color.Black.copy(alpha = 0.65f),
+                                        modifier = Modifier.align(Alignment.BottomEnd)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.ZoomIn,
+                                                contentDescription = null,
+                                                tint = Color.White,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            Text(
+                                                text = "View Full",
+                                                fontSize = 10.sp,
+                                                color = Color.White,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(8.dp))
                         Text(
                             text = "Date: ${cmp.dateStr}",
-                            fontSize = 11.sp,
+                            fontSize = 10.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        if (cmp.status != "Resolved") {
-                            Button(
-                                onClick = {
-                                    viewModel.resolveComplaint(cmp.id, "Resolved by Admin.")
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(34.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+
+                        // If already resolved and not editing, show current Admin Reply
+                        if (isResolved && !isEditingReply) {
+                            Spacer(Modifier.height(10.dp))
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color(0xFFF1F8F3),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGreen.copy(alpha = 0.35f)),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Mark Resolved", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                                Column(modifier = Modifier.padding(10.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                Icons.Default.SupportAgent,
+                                                contentDescription = null,
+                                                tint = PrimaryGreen,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(Modifier.width(6.dp))
+                                            Text(
+                                                text = "Admin Reply to Student:",
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = PrimaryGreen
+                                            )
+                                        }
+                                        TextButton(
+                                            onClick = {
+                                                editingReplyId = cmp.id
+                                                replyTextMap[cmp.id] = cmp.adminReply ?: ""
+                                            },
+                                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+                                        ) {
+                                            Text("Edit Reply", fontSize = 11.sp, color = PrimaryGreen, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                    Text(
+                                        text = cmp.adminReply ?: "Resolved by Admin",
+                                        fontSize = 12.5.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.padding(top = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Reply Input Section (if not resolved OR editing reply)
+                        if (!isResolved || isEditingReply) {
+                            Spacer(Modifier.height(12.dp))
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                            Spacer(Modifier.height(10.dp))
+
+                            Text(
+                                text = "Admin Back Reply (Student ko jawab bhejein):",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Spacer(Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = replyTextMap[cmp.id] ?: (cmp.adminReply ?: ""),
+                                onValueChange = { replyTextMap[cmp.id] = it },
+                                placeholder = {
+                                    Text("Yahan reply likhein (e.g. Wi-Fi restart kar diya hai, issue solved)...", fontSize = 12.sp)
+                                },
+                                minLines = 2,
+                                maxLines = 4,
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(Modifier.height(6.dp))
+                            // Quick Reply Suggestion Chips
+                            Text(
+                                text = "Quick Replies:",
+                                fontSize = 10.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                quickReplies.forEach { suggestion ->
+                                    SuggestionChip(
+                                        onClick = { replyTextMap[cmp.id] = suggestion },
+                                        label = { Text(suggestion, fontSize = 10.5.sp) }
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (isEditingReply) {
+                                    TextButton(
+                                        onClick = { editingReplyId = null },
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    ) {
+                                        Text("Cancel")
+                                    }
+                                }
+                                Button(
+                                    onClick = {
+                                        val typedReply = (replyTextMap[cmp.id] ?: "").trim()
+                                        val finalReply = if (typedReply.isNotBlank()) typedReply else "Complaint reviewed and resolved by Admin."
+                                        viewModel.resolveComplaint(cmp.id, finalReply)
+                                        editingReplyId = null
+                                        Toast.makeText(
+                                            context,
+                                            "Reply sent to ${cmp.studentName} & marked Resolved!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+                                    shape = RoundedCornerShape(10.dp),
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        text = if (isEditingReply) "Update & Send Reply" else "Reply & Mark Resolved",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    // Full-screen Complaint Image Viewer Dialog
+    fullScreenComplaintImageUri?.let { uriStr ->
+        AlertDialog(
+            onDismissRequest = { fullScreenComplaintImageUri = null },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Complaint Photo", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    IconButton(onClick = { fullScreenComplaintImageUri = null }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                }
+            },
+            text = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 450.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AppImageViewer(
+                        model = uriStr,
+                        contentDescription = "Full Complaint Photo",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { fullScreenComplaintImageUri = null }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 }
 
@@ -4883,8 +5363,8 @@ private fun AdminPaymentVerificationsContent(
                                     .clickable { fullScreenScreenshotUri = item.proofImageUri },
                                 contentAlignment = Alignment.Center
                             ) {
-                                AsyncImage(
-                                    model = Uri.parse(item.proofImageUri),
+                                AppImageViewer(
+                                    model = item.proofImageUri,
                                     contentDescription = "Payment Screenshot",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
@@ -5159,8 +5639,8 @@ private fun AdminPaymentVerificationsContent(
                         .heightIn(max = 420.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    AsyncImage(
-                        model = Uri.parse(uriStr),
+                    AppImageViewer(
+                        model = uriStr,
                         contentDescription = "Full Screenshot",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.fillMaxSize()

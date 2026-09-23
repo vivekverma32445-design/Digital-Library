@@ -41,6 +41,7 @@ import androidx.core.content.ContextCompat
 import com.example.ui.theme.EmeraldAccent
 import com.example.ui.theme.PrimaryGreen
 import com.google.zxing.*
+import com.google.zxing.common.GlobalHistogramBinarizer
 import com.google.zxing.common.HybridBinarizer
 import java.util.concurrent.Executors
 
@@ -525,50 +526,103 @@ class QrCodeFrameAnalyzer(
 ) : ImageAnalysis.Analyzer {
 
     private val reader = MultiFormatReader().apply {
-        setHints(mapOf(DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE)))
+        setHints(
+            mapOf(
+                DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
+                DecodeHintType.TRY_HARDER to java.lang.Boolean.TRUE,
+                DecodeHintType.CHARACTER_SET to "UTF-8"
+            )
+        )
     }
     private var lastScannedTime = 0L
 
     override fun analyze(imageProxy: ImageProxy) {
         val now = System.currentTimeMillis()
-        if (!canScan() || (now - lastScannedTime < 2500L)) {
+        if (!canScan() || (now - lastScannedTime < 1800L)) {
             imageProxy.close()
             return
         }
 
-        val plane = imageProxy.planes[0]
-        val buffer = plane.buffer
-        val data = ByteArray(buffer.remaining())
-        buffer.get(data)
-        val width = imageProxy.width
-        val height = imageProxy.height
-
         var detectedText: String? = null
         try {
-            val source = PlanarYUVLuminanceSource(
-                data, width, height, 0, 0, width, height, false
-            )
-            val bitmap = BinaryBitmap(HybridBinarizer(source))
-            val result = reader.decodeWithState(bitmap)
-            detectedText = result.text
-        } catch (e: Exception) {
-            // Try rotated 90 degrees if portrait camera
+            val plane = imageProxy.planes[0]
+            val buffer = plane.buffer
+            val rowStride = plane.rowStride
+            val width = imageProxy.width
+            val height = imageProxy.height
+            val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+
+            // Extract only luminance pixels row by row to eliminate camera sensor padding bytes
+            val yuvData = ByteArray(width * height)
+            for (y in 0 until height) {
+                buffer.position(y * rowStride)
+                buffer.get(yuvData, y * width, width)
+            }
+
+            // Apply orientation rotation based on camera hardware orientation
+            val (rotatedData, rotWidth, rotHeight) = when (rotationDegrees) {
+                90 -> Triple(rotateYUV420Degree90(yuvData, width, height), height, width)
+                180 -> Triple(rotateYUV420Degree180(yuvData, width, height), width, height)
+                270 -> Triple(rotateYUV420Degree270(yuvData, width, height), height, width)
+                else -> Triple(yuvData, width, height)
+            }
+
+            // Pass 1: Rotated orientation with HybridBinarizer
             try {
-                val rotatedData = rotateYUV420Degree90(data, width, height)
-                val rotatedSource = PlanarYUVLuminanceSource(
-                    rotatedData, height, width, 0, 0, height, width, false
+                reader.reset()
+                val source = PlanarYUVLuminanceSource(
+                    rotatedData, rotWidth, rotHeight, 0, 0, rotWidth, rotHeight, false
                 )
-                val rotatedBitmap = BinaryBitmap(HybridBinarizer(rotatedSource))
-                val result = reader.decodeWithState(rotatedBitmap)
+                val bitmap = BinaryBitmap(HybridBinarizer(source))
+                val result = reader.decodeWithState(bitmap)
                 detectedText = result.text
             } catch (_: Exception) {
-                // No QR detected in this frame
+                // Pass 2: Unrotated fallback with HybridBinarizer
+                try {
+                    reader.reset()
+                    val source = PlanarYUVLuminanceSource(
+                        yuvData, width, height, 0, 0, width, height, false
+                    )
+                    val bitmap = BinaryBitmap(HybridBinarizer(source))
+                    val result = reader.decodeWithState(bitmap)
+                    detectedText = result.text
+                } catch (_: Exception) {
+                    // Pass 3: GlobalHistogramBinarizer for low-contrast/reflective lighting
+                    try {
+                        reader.reset()
+                        val source = PlanarYUVLuminanceSource(
+                            rotatedData, rotWidth, rotHeight, 0, 0, rotWidth, rotHeight, false
+                        )
+                        val bitmap = BinaryBitmap(GlobalHistogramBinarizer(source))
+                        val result = reader.decodeWithState(bitmap)
+                        detectedText = result.text
+                    } catch (_: Exception) {
+                        // Pass 4: 90-degree fallback if rotationDegrees was 0
+                        if (rotationDegrees == 0) {
+                            try {
+                                reader.reset()
+                                val forced90 = rotateYUV420Degree90(yuvData, width, height)
+                                val source = PlanarYUVLuminanceSource(
+                                    forced90, height, width, 0, 0, height, width, false
+                                )
+                                val bitmap = BinaryBitmap(HybridBinarizer(source))
+                                val result = reader.decodeWithState(bitmap)
+                                detectedText = result.text
+                            } catch (_: Exception) {
+                            }
+                        }
+                    }
+                }
+            } finally {
+                reader.reset()
             }
+        } catch (_: Exception) {
+            // Frame analysis error handled gracefully
         } finally {
             imageProxy.close()
         }
 
-        if (detectedText != null && detectedText.isNotBlank()) {
+        if (!detectedText.isNullOrBlank()) {
             lastScannedTime = now
             onQrCodeScanned(detectedText)
         }
@@ -579,6 +633,26 @@ class QrCodeFrameAnalyzer(
         var i = 0
         for (x in 0 until imageWidth) {
             for (y in imageHeight - 1 downTo 0) {
+                yuv[i++] = data[y * imageWidth + x]
+            }
+        }
+        return yuv
+    }
+
+    private fun rotateYUV420Degree180(data: ByteArray, imageWidth: Int, imageHeight: Int): ByteArray {
+        val yuv = ByteArray(imageWidth * imageHeight)
+        val count = imageWidth * imageHeight
+        for (i in 0 until count) {
+            yuv[count - 1 - i] = data[i]
+        }
+        return yuv
+    }
+
+    private fun rotateYUV420Degree270(data: ByteArray, imageWidth: Int, imageHeight: Int): ByteArray {
+        val yuv = ByteArray(imageWidth * imageHeight)
+        var i = 0
+        for (x in imageWidth - 1 downTo 0) {
+            for (y in 0 until imageHeight) {
                 yuv[i++] = data[y * imageWidth + x]
             }
         }

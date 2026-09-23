@@ -79,21 +79,8 @@ object PasswordSecurity {
      * - At least one special symbol (@, #, $, %, etc.)
      */
     fun validatePasswordStrength(password: String): Pair<Boolean, String?> {
-        val check = checkPasswordCriteria(password)
-        if (!check.hasMinLength) {
-            return false to "Password must be at least 8 characters long."
-        }
-        if (!check.hasUpper) {
-            return false to "Password must contain at least one uppercase letter (A-Z)."
-        }
-        if (!check.hasLower) {
-            return false to "Password must contain at least one lowercase letter (a-z)."
-        }
-        if (!check.hasDigit) {
-            return false to "Password must contain at least one number (0-9)."
-        }
-        if (!check.hasSpecial) {
-            return false to "Password must contain at least one special character (!@#\$%^&*...)."
+        if (password.length < 6) {
+            return false to "Password must be at least 6 characters long."
         }
         return true to null
     }

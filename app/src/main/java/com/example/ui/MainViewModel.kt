@@ -107,15 +107,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         else flowOf(emptyList())
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    // Student Notifications
+    // Student & Admin Notifications (Strictly isolated by user and role)
     val notifications: StateFlow<List<NotificationItem>> = currentUser.flatMapLatest { user ->
-        if (user != null) repository.getNotificationsForStudent(user.id)
-        else flowOf(emptyList())
+        if (user != null) {
+            if (user.role == "ADMIN") repository.getNotificationsForAdmin()
+            else repository.getNotificationsForStudent(user.id)
+        } else flowOf(emptyList())
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val unreadNotificationCount: StateFlow<Int> = currentUser.flatMapLatest { user ->
-        if (user != null) repository.getUnreadNotificationCount(user.id)
-        else flowOf(0)
+        if (user != null) {
+            if (user.role == "ADMIN") repository.getAdminUnreadNotificationCount()
+            else repository.getUnreadNotificationCount(user.id)
+        } else flowOf(0)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     // Seat Booking & Admission State
@@ -144,8 +148,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         attendanceScanErrorMessage.value = null
     }
 
+    // Shared preferences for persistent local configurations & state
+    private val prefs = application.getSharedPreferences("mdl_library_prefs", android.content.Context.MODE_PRIVATE)
+
     // Dismissed announcements set
-    private val _dismissedAnnouncements = MutableStateFlow<Set<String>>(emptySet())
+    private val _dismissedAnnouncements = MutableStateFlow<Set<String>>(
+        prefs.all.keys
+            .filter { it.startsWith("dismissed_ann_") && prefs.getBoolean(it, false) }
+            .map { it.removePrefix("dismissed_ann_") }
+            .toSet()
+    )
     val dismissedAnnouncements: StateFlow<Set<String>> = _dismissedAnnouncements.asStateFlow()
 
     fun dismissAnnouncement(announcementId: String) {
@@ -180,7 +192,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }.stateIn(viewModelScope, SharingStarted.Eagerly, com.example.util.AttendanceUtils.getStreakMotivationMessage(0))
 
     // Dynamic Admin UPI ID (PhonePe Primary handle linked to Union Bank of India)
-    private val prefs = application.getSharedPreferences("mdl_library_prefs", android.content.Context.MODE_PRIVATE)
     private val _adminUpiId = MutableStateFlow(
         prefs.getString("admin_upi_id", "9569556006@ybl") ?: "9569556006@ybl"
     )
@@ -726,6 +737,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun deletePayment(paymentId: String, onResult: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            val res = repository.deletePaymentRecord(paymentId)
+            onResult(res.isSuccess)
+        }
+    }
+
+    fun resetTotalRevenue(onResult: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            val res = repository.resetAllPayments()
+            onResult(res.isSuccess)
+        }
+    }
+
+    fun shouldShowDailyExpiryReminder(studentId: String, daysRemaining: Int): Boolean {
+        if (daysRemaining !in 1..10) return false
+        val today = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.ENGLISH).format(java.util.Date())
+        val lastShown = prefs.getString("expiry_reminder_shown_$studentId", "")
+        return lastShown != today
+    }
+
+    fun dismissDailyExpiryReminder(studentId: String) {
+        val today = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.ENGLISH).format(java.util.Date())
+        prefs.edit().putString("expiry_reminder_shown_$studentId", today).apply()
+    }
+
     fun processAttendanceScan(
         qrPayload: String,
         onSuccess: (AttendanceScanResult) -> Unit,
@@ -1009,7 +1046,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun markAllNotificationsAsRead() {
         val user = currentUser.value ?: return
         viewModelScope.launch {
-            repository.markAllNotificationsAsRead(user.id)
+            if (user.role == "ADMIN") {
+                repository.markAllAdminNotificationsAsRead()
+            } else {
+                repository.markAllNotificationsAsRead(user.id)
+            }
         }
     }
 
